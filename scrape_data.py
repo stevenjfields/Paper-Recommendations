@@ -30,12 +30,18 @@ def main(num_to_scrape: int):
         results = serialized["results"]
         results_list = list()
         for result in results:
+            title = result["title"] if result['title'] else ""
+            title = re.sub(r'[\t\n\r]+', '', title)
+            title = re.sub(r'<\/*\w+>', '', title)
+
             abstract = combine_abstract(result["abstract_inverted_index"]) if result["abstract_inverted_index"] else ""
+            abstract = re.sub(r'[\t\n\r]+', '', abstract)
+            abstract = re.sub(r'<\/*\w+>', '', abstract)
 
             results_list.append(
                 {
-                    "title": result["title"],
-                    "abstract": re.sub(r'[\t\n]*', ' ', abstract)
+                    "title": title,
+                    "abstract": abstract
                 }
             )
         df = pandas.concat([df, pandas.DataFrame(results_list)])
