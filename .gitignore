@@ -3,3 +3,4 @@
 /saved/
 /embeddings/
 /docker/volumes
+*.pyc
