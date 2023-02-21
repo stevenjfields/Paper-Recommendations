@@ -1,6 +1,6 @@
 from .constants import COLLECTION_NAME
 from .models import Article, WeightedEdge
-from .milvus_shema import establish_connection
+from .milvus_schema import establish_connection
 
 from typing import List
 from pymilvus import utility, Collection
@@ -86,6 +86,8 @@ def create_embeddings(papers: List[Article]):
                 [paper.work_id], 
                 [pooled_normalized.tolist()[0]]
             ])
+    
+    collection.flush() # allows inserted data to be indexed
 
 def get_similarities(target: Article, sources: List[Article]) -> List[WeightedEdge]:
     establish_connection()
@@ -124,4 +126,5 @@ def get_similarities(target: Article, sources: List[Article]) -> List[WeightedEd
             )
         )
     
+    collection.release() # frees memory from collection.load()
     return edges
