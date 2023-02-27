@@ -3,7 +3,7 @@ from pymilvus import utility
 
 from app.api import app
 from app.constants import COLLECTION_NAME
-from backend.app.milvus_schema import establish_connection, create_collection
+from app.milvus_schema import establish_connection, create_collection
 
 if __name__ == '__main__':
     # Create Milvus Schema if it doesn't already exist
