@@ -4,3 +4,4 @@
 /embeddings/
 /docker/volumes
 *.pyc
+/frontend/node_modules/
