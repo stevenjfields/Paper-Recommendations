@@ -1,0 +1,8 @@
+#paper-item {
+    list-style: none;
+}
+
+.papers {
+    list-style-type: none;
+    background-color: aqua;
+}

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Paper Recommendations</title>
+        <link rel="stylesheet" src="./index.css"/>
+    </head>
+    <body>
+        <form>
+            <input type="text" id="search" placeholder="Enter paper title" />
+            <div id="results" class="results"></div>
+            <div class="depth-range">
+                <label for="depth">Depth (2 to 5):</label>
+                <input id="depth" type="range" min="2" max="5">
+            </div>
+            <input type="button" onclick=log_values() />
+        </form>
+        <script src="visualization.js"></script>
+        <script src="autocomplete.js"></script>
+        <div class="visualization">
+
+        </div>
+    </body>
+</html>
