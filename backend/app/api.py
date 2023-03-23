@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
-from typing import List
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Optional
 import requests
 import json
 
@@ -9,6 +10,16 @@ from .models import Article, WeightedEdge
 from .helpers import parse_article, create_embeddings, get_similarities
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/paper/{work_id}/")
 async def get_paper(work_id: str) -> Article:

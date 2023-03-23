@@ -5,8 +5,9 @@ class Article(BaseModel):
     # Keeping track of some needed paper details
     work_id: str
     title: str = ""
+    landing_page_url: str = ""
     inverted_abstract: Dict[str, List[int]] = {"": [0]}
-    authors: List[str] = []
+    authors: Optional[List[str]] = []
     host_venue: str = ""
     affiliations: List[str] = []
     concepts: List[str] = []

@@ -10,6 +10,7 @@ import torch
 def parse_article(result: str) -> Article:
     work_id = result["id"].split('/')[-1]
     title = result["title"]
+    landing_page_url = result["primary_location"]["landing_page_url"] if result["primary_location"] else None
     inverted_abstract = result['abstract_inverted_index']
     authors = [authorship['author']['display_name'] for authorship in result['authorships']]
     host_venue = result['host_venue']['publisher']
@@ -27,6 +28,7 @@ def parse_article(result: str) -> Article:
     return Article(
         work_id=work_id,
         title=title if title else "",
+        landing_page_url=landing_page_url if landing_page_url else "",
         inverted_abstract=inverted_abstract if inverted_abstract else {"": [0]},
         authors=authors if authors else [],
         host_venue=host_venue if host_venue else "",
@@ -102,7 +104,7 @@ def get_similarities(target: Article, sources: List[Article]) -> List[WeightedEd
     source_ids = [source.work_id for source in sources]
     source_id_query = ids_to_query(source_ids)
 
-    search_params = {"metric_type": "IP", "params": {"nprobe": 10}, "offset": 5}
+    search_params = {"metric_type": "IP", "params": {"nprobe": 128}, "offset": 0}
 
     results = collection.search(
         data=[target_embeddings],
