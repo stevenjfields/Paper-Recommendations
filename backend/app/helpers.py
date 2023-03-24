@@ -91,7 +91,7 @@ def create_embeddings(papers: List[Article]):
     
     collection.flush() # allows inserted data to be indexed
 
-def get_similarities(target: Article, sources: List[Article]) -> List[WeightedEdge]:
+async def get_similarities(target: Article, sources: List[Article]) -> List[WeightedEdge]:
     establish_connection()
     collection = Collection(COLLECTION_NAME)
     collection.load()

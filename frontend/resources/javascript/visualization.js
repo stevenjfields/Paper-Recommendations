@@ -1,4 +1,4 @@
-import {Helios} from "https://cdn.skypack.dev/helios-web?min";
+import {Helios} from "https://cdn.skypack.dev/helios-web@~v0.7.0?min";
 
 const fetchRootPaperDetails = async () => {
     let response = await fetch(
@@ -90,34 +90,56 @@ const getReferencesToDepth = async () => {
     return paper_map;
 };
 
-const getAllPaperSimilarities = async (paper_map) => {
+const getAllPaperSimilarities = async (paper_map, flat_map) => {
     let edges = new Array();
 
     for (var i = 0; i < paper_map.size-1; i++) {
         let current_depth = paper_map.get(i);
         let next_depth = paper_map.get(i+1);
 
-        //huge bottle neck atm
+        let reqs = [];
+
         for (var paper of current_depth) {
-            let sources = next_depth.filter(element => {
-                if (paper.references.length > 0) {
-                    return paper.references.includes(element.work_id);
-                } else {
-                    return paper.related.includes(element.work_id);
+
+            let works = []
+            if (paper.references.length > 0) {
+                works = paper.references;
+            } else {
+                works = paper.related;
+            }
+            let sources = [];
+
+            for (var work in works) {
+                let object = flat_map.get(works[work]);
+                if (object != null) {
+                    sources.push(object);
                 }
-            });
+            }
 
             if (sources.length > 0) {
-                let sims = await getSimilarities(
+                reqs.push(await getSimilarities(
                     paper,
                     sources
-                );
-                edges.push(sims);
+                ));
             }
         }
+
+        await Promise.all(reqs).then(
+            results => edges.push(results)
+        );
     }
 
-    return edges.flat();
+    return edges.flat(Infinity)
+};
+
+const flat_paper_map = (paper_list) => {
+    let flat_map = new Map();
+    
+    for (var paper in paper_list) {
+        flat_map.set(paper_list[paper].work_id, paper_list[paper]);
+    }
+
+    return flat_map;
 };
 
 const log_values = async () => {
@@ -136,7 +158,9 @@ const log_values = async () => {
     let response = await createEmbeddings(paper_list.flat());
     console.log(response)
 
-    let edges = await getAllPaperSimilarities(paper_map)
+    let flat_map = flat_paper_map(paper_list.flat());
+
+    let edges = await getAllPaperSimilarities(paper_map, flat_map)
     console.log(edges);
 
     let node_map = {};
@@ -155,20 +179,23 @@ const log_values = async () => {
         nodes: node_map, // Dictionary of nodes 
         edges: edges, // Array of edges
         use2D: false, // Choose between 2D or 3D layouts
+        fastEdges: false,
     });
-  
+
+    helios.pickeableEdges(Array(edges.length).fill().map((element, index) => index));
+    helios.nodesGlobalSizeBase(0.1);
+
+    //helios.nodeSize((node) => {});
+
     helios.onReady(() => {
         helios.zoomFactor(0.05);
         helios.zoomFactor(30,8000);
     });
 
-    helios.edgeWidth((sourceNode, targetNode, edgeIndex) => {
-        let weight = edges[edgeIndex.weight];
-        return [weight, weight];
-      });
-
     helios.onNodeHoverStart((node) => {
         console.log(`Node hovered: ${node.label}, ${node.url}`);
+        console.log(node);
+        console.log(node.edges)
     });
 
     helios.onNodeClick((node) => {
@@ -178,8 +205,9 @@ const log_values = async () => {
         );
     });
 
-    helios.onEdgeClick((edge) => {
+    helios.onEdgeHoverStart((edge) => {
         console.log(edge);
+        console.log(edges[edge.index]);
     });
 };
 
