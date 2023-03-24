@@ -106,14 +106,17 @@ async def get_similarities(target: Article, sources: List[Article]) -> List[Weig
 
     search_params = {"metric_type": "IP", "params": {"nprobe": 128}, "offset": 0}
 
-    results = collection.search(
+    results_future = collection.search(
         data=[target_embeddings],
         anns_field="embeddings",
         param=search_params,
         limit=len(sources),
         expr=f"work_id in [{source_id_query}]",
-        consistency_level="Strong"
+        consistency_level="Strong",
+        _async=True
     )
+
+    results = results_future.result()
 
     ids, distances = results[0].ids, results[0].distances
     results = zip(ids, distances)
