@@ -99,17 +99,21 @@ const getAllPaperSimilarities = async (paper_map) => {
 
         //huge bottle neck atm
         for (var paper of current_depth) {
-            let sims = await getSimilarities(
-                paper,
-                next_depth.filter(element => {
-                    if (paper.references.length > 0) {
-                        return paper.references.includes(element.work_id);
-                    } else {
-                        return paper.related.includes(element.work_id);
-                    }
-                })
-            );
-            edges.push(sims);
+            let sources = next_depth.filter(element => {
+                if (paper.references.length > 0) {
+                    return paper.references.includes(element.work_id);
+                } else {
+                    return paper.related.includes(element.work_id);
+                }
+            });
+
+            if (sources.length > 0) {
+                let sims = await getSimilarities(
+                    paper,
+                    sources
+                );
+                edges.push(sims);
+            }
         }
     }
 
@@ -165,6 +169,13 @@ const log_values = async () => {
 
     helios.onNodeHoverStart((node) => {
         console.log(`Node hovered: ${node.label}, ${node.url}`);
+    });
+
+    helios.onNodeClick((node) => {
+        window.open(
+            node.url,
+            '_blank'
+        );
     });
 
     helios.onEdgeClick((edge) => {
