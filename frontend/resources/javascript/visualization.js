@@ -167,6 +167,7 @@ const log_values = async () => {
     paper_list.flat().forEach(paper => {
         let entry_id = paper.work_id;
         let entry = {
+            "work_id": paper.work_id,
             "label":  paper.title,
             "url": paper.landing_page_url
         };
@@ -185,7 +186,34 @@ const log_values = async () => {
     helios.pickeableEdges(Array(edges.length).fill().map((element, index) => index));
     helios.nodesGlobalSizeBase(0.1);
 
-    //helios.nodeSize((node) => {});
+    helios.nodeSize((node) => {
+        let node_edges = node.edges;
+        let filtered = edges.filter((value, index) => node_edges.includes(index));
+        let targets = [];
+
+        let source_edges = filtered.filter((value) => {
+            targets.push(value.target);
+            return value.source == node.work_id;
+        });
+
+        if (source_edges.length > 0) {
+            let total_weight = source_edges.reduce((accumulator, currentValue) => {
+                return accumulator + currentValue["weight"];
+            }, 0);
+            let avg_weight = total_weight / source_edges.length;
+    
+            let target_nodes = node.neighbors.filter((value) =>
+                targets.includes(value.work_id)
+            );
+            let total_target_size = target_nodes.reduce((accumulator, currentValue) => {
+                return accumulator + currentValue.size;
+            }, 0);
+            let target_size = total_target_size / target_nodes.length;
+    
+            return avg_weight * target_size;
+        }
+        return 1;
+    });
 
     helios.onReady(() => {
         helios.zoomFactor(0.05);
@@ -194,8 +222,29 @@ const log_values = async () => {
 
     helios.onNodeHoverStart((node) => {
         console.log(`Node hovered: ${node.label}, ${node.url}`);
-        console.log(node);
         console.log(node.edges)
+        let node_edges = node.edges;
+        let filtered = edges.filter((value, index) => node_edges.includes(index));
+        let targets = [];
+
+        let source_edges = filtered.filter((value) => {
+            targets.push(value.target);
+            return value.source == node.work_id;
+        });
+        let total_weight = source_edges.reduce((accumulator, currentValue) => {
+            return accumulator + currentValue["weight"];
+        }, 0);
+        let avg_weight = total_weight / source_edges.length;
+
+        let target_nodes = node.neighbors.filter((value) =>
+            targets.includes(value.work_id)
+        );
+        let total_target_size = target_nodes.reduce((accumulator, currentValue) => {
+            return accumulator + currentValue.size;
+        }, 0);
+        let target_size = total_target_size / target_nodes.length;
+
+        return avg_weight * target_size;
     });
 
     helios.onNodeClick((node) => {
