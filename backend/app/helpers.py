@@ -6,6 +6,8 @@ from typing import List
 from pymilvus import utility, Collection
 from cogdl.oag import oagbert
 import torch
+import asyncio
+import numpy as np
 
 def parse_article(result: str) -> Article:
     work_id = result["id"].split('/')[-1]
@@ -91,10 +93,9 @@ def create_embeddings(papers: List[Article]):
     
     collection.flush() # allows inserted data to be indexed
 
-async def get_similarities(target: Article, sources: List[Article]) -> List[WeightedEdge]:
+async def compute_similarities(target: Article, sources: List[Article]):
     establish_connection()
     collection = Collection(COLLECTION_NAME)
-    collection.load()
 
     target_embeddings = collection.query(
         expr = f'work_id == "{target.work_id}"',
@@ -104,32 +105,51 @@ async def get_similarities(target: Article, sources: List[Article]) -> List[Weig
     source_ids = [source.work_id for source in sources]
     source_id_query = ids_to_query(source_ids)
 
-    search_params = {"metric_type": "IP", "params": {"nprobe": 128}, "offset": 0}
-
-    results_future = collection.search(
-        data=[target_embeddings],
-        anns_field="embeddings",
-        param=search_params,
-        limit=len(sources),
-        expr=f"work_id in [{source_id_query}]",
-        consistency_level="Strong",
-        _async=True
+    results = collection.query(
+        f'work_id in [{source_id_query}]',
+        output_fields=["work_id", "embeddings"],
     )
 
-    results = results_future.result()
+    sims = {}
+    for result in results:
+        work_id = result["work_id"]
+        embeddings = result["embeddings"]
 
-    ids, distances = results[0].ids, results[0].distances
-    results = zip(ids, distances)
+        sim = np.dot(target_embeddings, np.asarray(embeddings).T)
+        sims[work_id] = sim
+
+    return sims
+
+
+async def get_similarities(root: Article, target: Article, sources: List[Article]) -> List[WeightedEdge]:
+    if root == target:
+        root_sims = target_sims = await compute_similarities(root, sources)
+    else:
+        root_sims = asyncio.create_task(compute_similarities(root, sources))
+        target_sims = asyncio.create_task(compute_similarities(target, sources))
+        await asyncio.wait([root_sims, target_sims])
+        root_sims = root_sims.result()
+        target_sims = target_sims.result()
+
+    concept_overlaps = {}
+    author_overlaps = {}
+    for source in sources:
+        c_overlap = len(set(root.concepts) & set(source.concepts))
+        a_overlap = len(set(root.authors) & set(source.authors))
+        concept_overlaps[source.work_id] = float(c_overlap / len(root.concepts))
+        author_overlaps[source.work_id] = float(a_overlap / len(root.authors))
 
     edges = []
-    for result in results:
+    for source in sources:
         edges.append(
             WeightedEdge(
                 target=target.work_id,
-                source=result[0],
-                weight=result[1]
+                source=source.work_id,
+                weight=target_sims[source.work_id],
+                root_weight=root_sims[source.work_id],
+                concept_overlap=concept_overlaps[source.work_id],
+                author_overlap=author_overlaps[source.work_id]
             )
         )
     
-    collection.release() # frees memory from collection.load()
     return edges

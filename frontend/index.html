@@ -3,6 +3,22 @@
     <head>
         <title>Paper Recommendations</title>
         <link rel="stylesheet" src="./index.css"/>
+        <style>
+            #tooltip {
+                position: absolute;
+                display: none;
+                margin-left: 15px;
+                padding: 3px;
+                position: absolute;
+                z-index: 1000;
+                text-shadow:
+                  -1px -1px 0 #FFF,
+                  1px -1px 0 #FFF,
+                  -1px 1px 0 #FFF,
+                  1px 1px 0 #FFF;
+                pointer-events: none;
+            }
+        </style>
     </head>
     <body>
         <form>
@@ -14,6 +30,7 @@
             </div>
             <input type="button" value="Find similar papers" id="submit"></input>
         </form>
+        <div id="tooltip">Tooltip</div>
         <script src="./resources/javascript/global_vars.js"></script>
         <script src="./resources/javascript/autocomplete.js"></script>
         <script src="./resources/javascript/visualization.js", type="module"></script>

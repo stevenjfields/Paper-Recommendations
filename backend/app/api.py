@@ -60,9 +60,9 @@ async def embeddings(articles: List[Article]) -> dict:
     }
 
 @app.post("/similarities/")
-async def similarities(target: Article, sources: List[Article]) -> Optional[List[WeightedEdge]]:
+async def similarities(root: Article, target: Article, sources: List[Article]) -> Optional[List[WeightedEdge]]:
     try:
-        sims = await get_similarities(target, sources)
+        sims = await get_similarities(root, target, sources)
     except Exception as e:
         return {
             "status": "failed",

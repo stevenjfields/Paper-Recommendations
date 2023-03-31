@@ -6,3 +6,8 @@
     list-style-type: none;
     background-color: aqua;
 }
+
+#visualization {
+    height: 1280px;
+    width: 720px;
+}

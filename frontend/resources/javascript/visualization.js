@@ -1,4 +1,6 @@
-import {Helios} from "https://cdn.skypack.dev/helios-web@~v0.7.0?min";
+import {Helios} from "https://cdn.skypack.dev/helios-web@=v0.7.0?min";
+import { rgb as d3rgb, hsl as d3hsl } from "https://cdn.skypack.dev/d3-color@3";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
 const fetchRootPaperDetails = async () => {
     let response = await fetch(
@@ -47,8 +49,9 @@ const createEmbeddings = async (paper_list) => {
     return response
 };
 
-const getSimilarities = async (target, sources) => {
+const getSimilarities = async (root, target, sources) => {
     let body = JSON.stringify({
+        "root": root,
         "target": target,
         "sources": sources
     });
@@ -92,6 +95,7 @@ const getReferencesToDepth = async () => {
 
 const getAllPaperSimilarities = async (paper_map, flat_map) => {
     let edges = new Array();
+    let root = paper_map.get(0)[0];
 
     for (var i = 0; i < paper_map.size-1; i++) {
         let current_depth = paper_map.get(i);
@@ -118,6 +122,7 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
 
             if (sources.length > 0) {
                 reqs.push(await getSimilarities(
+                    root,
                     paper,
                     sources
                 ));
@@ -142,7 +147,43 @@ const flat_paper_map = (paper_list) => {
     return flat_map;
 };
 
+let stylizeTooltip = (label,color,x,y,isnew) => {
+    if(label){
+        tooltipElement.style.left = x + "px";
+        tooltipElement.style.top = y + "px";
+        if(isnew){
+            tooltipElement.style.display = "block";
+            let colorRGB = d3rgb(color[0] * 255, color[1] * 255, color[2] * 255);
+            let colorHSL = d3hsl(colorRGB);
+            if (colorHSL.l>0.35) {
+                tooltipElement.style.color = colorRGB.brighter(1.1).formatRgb();
+                tooltipElement.style["text-shadow"] = "-1px -1px 1px black, 1px -1px 1px black, -1px 1px 1px black, 1px 1px 1px black";
+                // tooltipElement.style["-webkit-text-stroke"] = "1px black";
+            } else {
+                tooltipElement.style.color = colorRGB.darker(1.1).formatRgb();
+                tooltipElement.style["text-shadow"] = "-1px -1px 0px rgba(255,255,255,0.75), 1px -1px 0px rgba(255,255,255,0.75), -1px 1px 0px rgba(255,255,255,0.75), 1px 1px 0px rgba(255,255,255,0.75)";
+                // tooltipElement.style["-webkit-text-stroke"] = "1px black";
+            }
+        }
+        tooltipElement.textContent = label;
+    }else{
+        tooltipElement.style.display = "none";
+    }
+}
+
+let showTooltipForNode = (node,x,y,isNew) => {
+    if (node) {
+        let label = node.label ?? node.title ?? node.ID;
+        stylizeTooltip(label,node.color,x,y,isNew);
+        // nodesHighlight([node],true);
+    } else {
+        stylizeTooltip(null);
+    }
+}
+
 const log_values = async () => {
+    let colors = d3.interpolateCool;
+
     let paper_map = await getReferencesToDepth();
     console.log(paper_map)
     let paper_list = new Array();
@@ -188,6 +229,10 @@ const log_values = async () => {
 
     helios.nodeSize((node) => {
         let node_edges = node.edges;
+        if (node_edges.length == 0){
+            return 0;
+        }
+
         let filtered = edges.filter((value, index) => node_edges.includes(index));
         let targets = [];
 
@@ -200,7 +245,12 @@ const log_values = async () => {
             let total_weight = source_edges.reduce((accumulator, currentValue) => {
                 return accumulator + currentValue["weight"];
             }, 0);
+            let total_root_weight = source_edges.reduce((accumulator, currentValue) => {
+                return accumulator + currentValue["root_weight"];
+            }, 0)
             let avg_weight = total_weight / source_edges.length;
+            let avg_root_weight = total_root_weight / source_edges.length;
+            let weight = (avg_weight + avg_root_weight) / 2
     
             let target_nodes = node.neighbors.filter((value) =>
                 targets.includes(value.work_id)
@@ -210,9 +260,17 @@ const log_values = async () => {
             }, 0);
             let target_size = total_target_size / target_nodes.length;
     
-            return avg_weight * target_size;
+            return weight * target_size;
         }
         return 1;
+    });
+
+    helios.nodeColor((node) => {
+        let node_color = d3.color(colors(node.size));
+        return [node_color["r"]/255,
+                node_color["g"]/255,
+                node_color["b"]/255,
+                node_color["opacity"]];
     });
 
     helios.onReady(() => {
@@ -220,31 +278,14 @@ const log_values = async () => {
         helios.zoomFactor(30,8000);
     });
 
-    helios.onNodeHoverStart((node) => {
-        console.log(`Node hovered: ${node.label}, ${node.url}`);
-        console.log(node.edges)
-        let node_edges = node.edges;
-        let filtered = edges.filter((value, index) => node_edges.includes(index));
-        let targets = [];
+    helios.onNodeHoverStart((node, event) => {
+        
+        showTooltipForNode(node, event?.clientX, event?.clientY, true);
+        console.log(node.color);
+    });
 
-        let source_edges = filtered.filter((value) => {
-            targets.push(value.target);
-            return value.source == node.work_id;
-        });
-        let total_weight = source_edges.reduce((accumulator, currentValue) => {
-            return accumulator + currentValue["weight"];
-        }, 0);
-        let avg_weight = total_weight / source_edges.length;
-
-        let target_nodes = node.neighbors.filter((value) =>
-            targets.includes(value.work_id)
-        );
-        let total_target_size = target_nodes.reduce((accumulator, currentValue) => {
-            return accumulator + currentValue.size;
-        }, 0);
-        let target_size = total_target_size / target_nodes.length;
-
-        return avg_weight * target_size;
+    helios.onNodeHoverEnd((node, event) => {
+        showTooltipForNode(null);
     });
 
     helios.onNodeClick((node) => {
@@ -252,6 +293,8 @@ const log_values = async () => {
             node.url,
             '_blank'
         );
+        console.log(node);
+        console.log(flat_map.get(node.work_id));
     });
 
     helios.onEdgeHoverStart((edge) => {

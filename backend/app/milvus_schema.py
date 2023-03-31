@@ -29,7 +29,7 @@ def create_collection():
   index_params = {
       "metric_type": "IP",
       "index_type": "IVF_FLAT",
-      "params": {"nlist": 128}
+      "params": {"nlist": 1}
   }
 
   paper_trail_collection.create_index(field_name="embeddings", index_params=index_params)
