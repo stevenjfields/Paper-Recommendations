@@ -79,15 +79,19 @@ const getReferencesToDepth = async () => {
 
     for (var i = 0; i < depth_input.value-1; i++) {
         let current_depth = paper_map.get(i);
+        paper_map.set(i+1, []);
 
-        for (var paper of current_depth) {
-            if (paper_map.has(i+1)) {
-                let next = paper_map.get(i+1);
-                let refs = await fetchReferences(paper);
-                paper_map.set(i+1, [next, refs].flat());
-            } else {
-                paper_map.set(i+1, await fetchReferences(paper));
-            }
+        for (var j = 0; j < current_depth.length; j+=CONCURRENCY_LIMIT) {
+            let slice = current_depth.slice(j, j+CONCURRENCY_LIMIT);
+            let requests = [];
+            slice.forEach((value) => {
+                requests.push(fetchReferences(value));
+            });
+
+            await Promise.all(requests).then((value) => {
+                let next_depth = paper_map.get(i+1);
+                paper_map.set(i+1, [next_depth, value].flat(2));
+            });
         }
     };
     return paper_map;
@@ -111,7 +115,7 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
             } else {
                 works = paper.related;
             }
-            let sources = [];
+            let sources = []
 
             for (var work in works) {
                 let object = flat_map.get(works[work]);
@@ -121,7 +125,7 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
             }
 
             if (sources.length > 0) {
-                reqs.push(await getSimilarities(
+                reqs.push(getSimilarities(
                     root,
                     paper,
                     sources
@@ -147,8 +151,8 @@ const flat_paper_map = (paper_list) => {
     return flat_map;
 };
 
-let stylizeTooltip = (label,color,x,y,isnew) => {
-    if(label){
+let stylizeTooltip = (content,color,x,y,isnew) => {
+    if(content){
         tooltipElement.style.left = x + "px";
         tooltipElement.style.top = y + "px";
         if(isnew){
@@ -161,48 +165,52 @@ let stylizeTooltip = (label,color,x,y,isnew) => {
                 // tooltipElement.style["-webkit-text-stroke"] = "1px black";
             } else {
                 tooltipElement.style.color = colorRGB.darker(1.1).formatRgb();
-                tooltipElement.style["text-shadow"] = "-1px -1px 0px rgba(255,255,255,0.75), 1px -1px 0px rgba(255,255,255,0.75), -1px 1px 0px rgba(255,255,255,0.75), 1px 1px 0px rgba(255,255,255,0.75)";
+                tooltipElement.style["text-shadow"] = "-1px -1px 0px rgba(200,200,200,0.75), 1px -1px 0px rgba(200,200,200,0.75), -1px 1px 0px rgba(200,200,200,0.75), 1px 1px 0px rgba(200,200,200,0.75)";
                 // tooltipElement.style["-webkit-text-stroke"] = "1px black";
             }
         }
-        tooltipElement.textContent = label;
+        tooltipElement.innerText = content;
     }else{
         tooltipElement.style.display = "none";
+        tooltipElement.replaceChildren();
     }
 }
 
-let showTooltipForNode = (node,x,y,isNew) => {
+let showTooltipForNode = (node,edges,x,y,isNew) => {
     if (node) {
-        let label = node.label ?? node.title ?? node.ID;
-        stylizeTooltip(label,node.color,x,y,isNew);
-        // nodesHighlight([node],true);
+        let source_edge = edges.filter((value) => value.source == node.work_id)[0];
+
+        let content = `${node.label}`;
+
+        if (source_edge != null) {
+            content += `\nParent Similarity: ${(source_edge.weight * 100).toFixed(1)}`;
+            content += `\nRoot Similarity: ${(source_edge.root_weight * 100).toFixed(1)}`;
+        }
+        stylizeTooltip(content,node.color,x,y,isNew);
     } else {
         stylizeTooltip(null);
     }
 }
 
 const log_values = async () => {
-    let colors = d3.interpolateCool;
+    let helios = null;
+    let colors = d3.interpolateInferno;
 
     let paper_map = await getReferencesToDepth();
-    console.log(paper_map)
     let paper_list = new Array();
     let map_iter = paper_map.values();
 
     let result = map_iter.next();
     while(!result.done) {
-        console.log(result.value);
         paper_list.push(result.value);
         result = map_iter.next();
     }
 
     let response = await createEmbeddings(paper_list.flat());
-    console.log(response)
 
     let flat_map = flat_paper_map(paper_list.flat());
 
     let edges = await getAllPaperSimilarities(paper_map, flat_map)
-    console.log(edges);
 
     let node_map = {};
     paper_list.flat().forEach(paper => {
@@ -214,9 +222,8 @@ const log_values = async () => {
         };
         node_map[entry_id] = entry;
     });
-    console.log(node_map);
 
-    let helios = new Helios({
+    helios = new Helios({
         elementID: "visualization", // ID of the element to render the network in
         nodes: node_map, // Dictionary of nodes 
         edges: edges, // Array of edges
@@ -225,7 +232,9 @@ const log_values = async () => {
     });
 
     helios.pickeableEdges(Array(edges.length).fill().map((element, index) => index));
-    helios.nodesGlobalSizeBase(0.1);
+    helios.nodesGlobalSizeBase(0.2);
+    helios.backgroundColor([0.5,0.5,0.5,1]);
+    helios.edgesGlobalOpacityBase(0.9);
 
     helios.nodeSize((node) => {
         let node_edges = node.edges;
@@ -275,13 +284,11 @@ const log_values = async () => {
 
     helios.onReady(() => {
         helios.zoomFactor(0.05);
-        helios.zoomFactor(30,8000);
+        helios.zoomFactor(30,5000);
     });
 
-    helios.onNodeHoverStart((node, event) => {
-        
-        showTooltipForNode(node, event?.clientX, event?.clientY, true);
-        console.log(node.color);
+    helios.onNodeHoverStart((node, event) => {   
+        showTooltipForNode(node, edges, event?.clientX, event?.clientY, true);
     });
 
     helios.onNodeHoverEnd((node, event) => {
@@ -289,17 +296,28 @@ const log_values = async () => {
     });
 
     helios.onNodeClick((node) => {
+        setTimeout(() => {
+            helios.centerOnNodes([node.ID], 500);
+            },
+            250
+        );
+    });
+
+    helios.onNodeDoubleClick((node) => {
         window.open(
             node.url,
             '_blank'
         );
-        console.log(node);
-        console.log(flat_map.get(node.work_id));
     });
 
-    helios.onEdgeHoverStart((edge) => {
-        console.log(edge);
-        console.log(edges[edge.index]);
+    helios.onEdgeClick((edge) => {
+        helios.centerOnNodes(
+            [
+                edge.source.ID,
+                edge.target.ID
+            ],
+            500
+        );
     });
 };
 

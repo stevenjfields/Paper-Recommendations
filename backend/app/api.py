@@ -1,5 +1,7 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import requests
@@ -10,6 +12,7 @@ from .models import Article, WeightedEdge
 from .helpers import parse_article, create_embeddings, get_similarities
 
 app = FastAPI()
+templates = Jinja2Templates(directory="frontend")
 
 origins = ["*"]
 
@@ -20,6 +23,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static/", StaticFiles(directory="./frontend/resources/"), "static")
 
 @app.get("/paper/{work_id}/")
 async def get_paper(work_id: str) -> Article:
@@ -69,3 +74,7 @@ async def similarities(root: Article, target: Article, sources: List[Article]) -
             "error": str(e)
         }
     return sims
+
+@app.get("/")
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
