@@ -103,7 +103,6 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
 
     for (var i = 0; i < paper_map.size-1; i++) {
         let current_depth = paper_map.get(i);
-        let next_depth = paper_map.get(i+1);
 
         let reqs = [];
 
@@ -133,9 +132,12 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
             }
         }
 
-        await Promise.all(reqs).then(
-            results => edges.push(results)
-        );
+        for (var j = 0; j < reqs.length; j+=CONCURRENCY_LIMIT) {
+            let slice = reqs.slice(j, j+CONCURRENCY_LIMIT);
+            await Promise.all(slice).then((value) => {
+                edges.push(value);
+            })
+        }
     }
 
     return edges.flat(Infinity)
@@ -194,7 +196,7 @@ let showTooltipForNode = (node,edges,x,y,isNew) => {
 
 const log_values = async () => {
     let helios = null;
-    let colors = d3.interpolateInferno;
+    let colors = d3.interpolateCool;
 
     let paper_map = await getReferencesToDepth();
     let paper_list = new Array();
@@ -205,12 +207,14 @@ const log_values = async () => {
         paper_list.push(result.value);
         result = map_iter.next();
     }
+    if (DEBUG) { console.log(paper_map); }
 
     let response = await createEmbeddings(paper_list.flat());
+    if (DEBUG) { console.log(response); }
 
     let flat_map = flat_paper_map(paper_list.flat());
-
     let edges = await getAllPaperSimilarities(paper_map, flat_map)
+    if (DEBUG) { console.log(`Number of papers: ${flat_map.size}\nNumber of edges: ${edges.length}`)}
 
     let node_map = {};
     paper_list.flat().forEach(paper => {
@@ -287,7 +291,8 @@ const log_values = async () => {
         helios.zoomFactor(30,5000);
     });
 
-    helios.onNodeHoverStart((node, event) => {   
+    helios.onNodeHoverStart((node, event) => {
+        if (DEBUG) {console.log(node);}
         showTooltipForNode(node, edges, event?.clientX, event?.clientY, true);
     });
 
@@ -318,6 +323,10 @@ const log_values = async () => {
             ],
             500
         );
+    });
+
+    helios.onEdgeHoverStart((edge) => {
+        if (DEBUG) { console.log(edge); }
     });
 };
 
