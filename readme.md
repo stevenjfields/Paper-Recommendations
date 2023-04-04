@@ -9,3 +9,14 @@ In order to get a local standalone version of Milvus up and running, run the fol
 Then to shut the servers down simply run the following:
 
 `docker-compose -f ./docker/docker-compose.milvus.yml down`
+
+## Local Setup: Web App
+To run the webserver, you'll need python 3.6+ installed, and to install the `requirements.txt` file. This can be done with the following command:
+
+`pip install -r requirements.txt`
+
+To run the web app, run the following command from the backend folder:
+
+`python main.py`
+
+To shut down the server use `Ctrl + C`.
