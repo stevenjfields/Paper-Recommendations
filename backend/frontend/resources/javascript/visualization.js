@@ -184,7 +184,7 @@ let showTooltipForNode = (node,edges,x,y,isNew) => {
 
         let content = `${node.label}`;
 
-        if (source_edge != null) {
+        if (source_edge != null && node.work_id != selected_paper_id) {
             content += `\nParent Similarity: ${(source_edge.weight * 100).toFixed(1)}`;
             content += `\nRoot Similarity: ${(source_edge.root_weight * 100).toFixed(1)}`;
         }
@@ -241,6 +241,10 @@ const log_values = async () => {
     helios.edgesGlobalOpacityBase(0.9);
 
     helios.nodeSize((node) => {
+        if (node.work_id == selected_paper_id) {
+            return 1;
+        }
+
         let node_edges = node.edges;
         if (node_edges.length == 0){
             return 0;
@@ -254,28 +258,25 @@ const log_values = async () => {
             return value.source == node.work_id;
         });
 
-        if (source_edges.length > 0) {
-            let total_weight = source_edges.reduce((accumulator, currentValue) => {
-                return accumulator + currentValue["weight"];
-            }, 0);
-            let total_root_weight = source_edges.reduce((accumulator, currentValue) => {
-                return accumulator + currentValue["root_weight"];
-            }, 0)
-            let avg_weight = total_weight / source_edges.length;
-            let avg_root_weight = total_root_weight / source_edges.length;
-            let weight = (avg_weight + avg_root_weight) / 2
-    
-            let target_nodes = node.neighbors.filter((value) =>
-                targets.includes(value.work_id)
-            );
-            let total_target_size = target_nodes.reduce((accumulator, currentValue) => {
-                return accumulator + currentValue.size;
-            }, 0);
-            let target_size = total_target_size / target_nodes.length;
-    
-            return weight * target_size;
-        }
-        return 1;
+        let total_weight = source_edges.reduce((accumulator, currentValue) => {
+            return accumulator + currentValue["weight"];
+        }, 0);
+        let total_root_weight = source_edges.reduce((accumulator, currentValue) => {
+            return accumulator + currentValue["root_weight"];
+        }, 0)
+        let avg_weight = total_weight / source_edges.length;
+        let avg_root_weight = total_root_weight / source_edges.length;
+        let weight = (avg_weight + avg_root_weight) / 2
+
+        let target_nodes = node.neighbors.filter((value) =>
+            targets.includes(value.work_id)
+        );
+        let total_target_size = target_nodes.reduce((accumulator, currentValue) => {
+            return accumulator + currentValue.size;
+        }, 0);
+        let target_size = total_target_size / target_nodes.length;
+
+        return weight * target_size;
     });
 
     helios.nodeColor((node) => {

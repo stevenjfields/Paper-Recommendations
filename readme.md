@@ -1,6 +1,11 @@
 # Independent: Recommending Papers based on similarity metrics
 This repo contains my work for an independent study in place of my capstone course for a master's in data science from Indiana University. The aim of the study is to try and recommend papers to read relevant to research you plan to read.
 
+## Tech Stack
+* Backend: Python's FastAPI
+* Frontend: Javascript and Helios-web
+* PyTorch, OAG-Bert, and Milvus for creating and storing embeddings.
+
 ## Local Setup: Milvus
 In order to get a local standalone version of Milvus up and running, run the following docker-compose command:
 
