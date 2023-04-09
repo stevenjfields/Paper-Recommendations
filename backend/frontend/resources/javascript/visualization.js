@@ -194,7 +194,7 @@ let showTooltipForNode = (node,edges,x,y,isNew) => {
     }
 }
 
-const log_values = async () => {
+const create_visualization = async () => {
     let helios = null;
     let colors = d3.interpolateCool;
 
@@ -331,4 +331,7 @@ const log_values = async () => {
     });
 };
 
-document.getElementById("submit").addEventListener("click", log_values);
+document.getElementById("submit").addEventListener("click", create_visualization);
+selected_paper_id = "W2963403868";
+depth_input.value = 3;
+document.addEventListener("DOMContentLoaded", create_visualization);
