@@ -227,6 +227,7 @@ const create_visualization = async () => {
         node_map[entry_id] = entry;
     });
 
+    toggle_display();
     helios = new Helios({
         elementID: "visualization", // ID of the element to render the network in
         nodes: node_map, // Dictionary of nodes 
@@ -331,7 +332,10 @@ const create_visualization = async () => {
     });
 };
 
-document.getElementById("submit").addEventListener("click", create_visualization);
+document.getElementById("submit").addEventListener("click", () => {
+    toggle_display();
+    create_visualization();
+});
 selected_paper_id = "W2963403868";
 depth_input.value = 3;
 document.addEventListener("DOMContentLoaded", create_visualization);

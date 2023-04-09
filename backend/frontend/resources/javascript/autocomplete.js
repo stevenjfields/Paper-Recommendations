@@ -1,4 +1,21 @@
 
+const toggle_display = () => {
+    main = document.getElementById("main-content");
+    loading = document.getElementById("loading-screen");
+
+    console.log(main.classList);
+
+    if (main.classList[0] == "visible") {
+        main.classList = ["hidden"]
+        loading.classList = ["visible"];
+    } else {
+        main.classList = ["visible"];
+        loading.classList = ["hidden"];
+    }
+
+    console.log(main);
+}
+
 const fetchPapers = async () => {
     let response = await fetch(
         `https://api.openalex.org/autocomplete/works?q=${search_term}`

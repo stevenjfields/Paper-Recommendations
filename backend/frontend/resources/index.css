@@ -1,10 +1,9 @@
-#paper-item {
+.paper-item {
     list-style: none;
 }
 
 .papers {
     list-style-type: none;
-    background-color: aqua;
 }
 
 #tooltip {
@@ -26,4 +25,29 @@
     background-color: #888;
     width: 100%;
     height: 100%;
+}
+
+#loading-scren {
+    background-color: aqua;
+    width: max-content;
+    height: max-content;
+}
+
+.visible {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}
+
+.container-fluid {
+    padding: 0 !important;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    padding: 0px;
 }
