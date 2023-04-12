@@ -7,7 +7,7 @@ class Article(BaseModel):
     title: str = ""
     landing_page_url: str = ""
     inverted_abstract: Dict[str, List[int]] = {"": [0]}
-    authors: Optional[List[str]] = []
+    authors: Optional[List[str]]
     host_venue: str = ""
     affiliations: List[str] = []
     concepts: List[str] = []

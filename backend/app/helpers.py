@@ -14,14 +14,22 @@ def parse_article(result: str) -> Article:
     title = result["title"]
     landing_page_url = result["primary_location"]["landing_page_url"] if result["primary_location"] else None
     inverted_abstract = result['abstract_inverted_index']
-    authors = [authorship['author']['display_name'] for authorship in result['authorships']]
+    authors = []
     host_venue = result['host_venue']['publisher']
-    institutions = list()
+    institutions = []
 
     for authorship in result['authorships']:
-        for institution in authorship['institutions']: 
-            if institution['display_name'] not in institutions:
-                institutions.append(institution['display_name'])
+        author = authorship.get("author", None)
+        institutes = authorship.get("institutions", None)
+        if author:
+            name = author.get("display_name", None)
+            if name:
+                authors.append(name)
+        if institutes:
+            for institute in institutes:
+                institution = institute.get("display_name", None)
+                if institution:
+                    institutions.append(institution)
 
     concepts = [concept['display_name'] for concept in result['concepts'] if float(concept['score']) > 0.5]
     referenced_works = [work.split('/')[-1] for work in result['referenced_works']]
@@ -32,9 +40,9 @@ def parse_article(result: str) -> Article:
         title=title if title else "",
         landing_page_url=landing_page_url if landing_page_url else "",
         inverted_abstract=inverted_abstract if inverted_abstract else {"": [0]},
-        authors=authors if authors else [],
+        authors=authors,
         host_venue=host_venue if host_venue else "",
-        affiliations=institutions if institutions else [],
+        affiliations=list(set(institutions)),
         concepts=concepts if concepts else [],
         references=referenced_works if referenced_works else [],
         related=related_works if related_works else []
@@ -63,6 +71,9 @@ def create_embeddings(papers: List[Article]):
 
 
     _, model = oagbert("oagbert-v2")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model.to(device)
+
     for paper in papers:
         if paper.work_id in ids_to_embed:
             input_ids, input_masks, token_type_ids, masked_lm_labels, position_ids, position_ids_second, masked_positions, num_spans = model.build_inputs(
@@ -73,15 +84,15 @@ def create_embeddings(papers: List[Article]):
             concepts=paper.concepts, 
             affiliations=paper.affiliations
             )
-            
+
             _, pooled_output = model.bert.forward(
-                input_ids=torch.LongTensor(input_ids).unsqueeze(0),
-                token_type_ids=torch.LongTensor(token_type_ids).unsqueeze(0),
-                attention_mask=torch.LongTensor(input_masks).unsqueeze(0),
+                input_ids=torch.LongTensor(input_ids).unsqueeze(0).to(device),
+                token_type_ids=torch.LongTensor(token_type_ids).unsqueeze(0).to(device),
+                attention_mask=torch.LongTensor(input_masks).unsqueeze(0).to(device),
                 output_all_encoded_layers=False,
                 checkpoint_activations=False,
-                position_ids=torch.LongTensor(position_ids).unsqueeze(0),
-                position_ids_second=torch.LongTensor(position_ids_second).unsqueeze(0)
+                position_ids=torch.LongTensor(position_ids).unsqueeze(0).to(device),
+                position_ids_second=torch.LongTensor(position_ids_second).unsqueeze(0).to(device)
             )
 
             pooled_normalized = torch.nn.functional.normalize(pooled_output, p=2, dim=1)

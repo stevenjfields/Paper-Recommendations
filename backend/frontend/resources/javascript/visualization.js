@@ -287,6 +287,9 @@ const create_visualization = async () => {
                 node_color["b"]/255,
                 node_color["opacity"]];
     });
+    helios.nodeOutlineColor([1,0,0,1]);
+    helios.nodeOutlineWidth(0.1);
+    helios.nodesGlobalOutlineOpacityScale(1);
 
     helios.onReady(() => {
         helios.zoomFactor(0.05);

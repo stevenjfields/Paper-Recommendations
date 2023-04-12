@@ -34,7 +34,7 @@ async def get_paper(work_id: str) -> Article:
     return article
 
 @app.post("/references/")
-async def get_references(parent: Article) -> List[Article]:
+async def get_references(parent: Article) -> Optional[List[Article]]:
     references = []
     if len(parent.references) > 0:
         queries = parent.fetch_references_queries()
