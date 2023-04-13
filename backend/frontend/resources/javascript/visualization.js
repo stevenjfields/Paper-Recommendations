@@ -2,6 +2,23 @@ import {Helios} from "https://cdn.skypack.dev/helios-web@=v0.7.0?min";
 import { rgb as d3rgb, hsl as d3hsl } from "https://cdn.skypack.dev/d3-color@3";
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
+const fetchPapersUpdate = (length) => {
+    progress_status.innerText = "Fetching papers from open alex ..."
+    progressDetails.innerText = `Number fetched: ${length}`;
+};
+
+const createEmbeddingsUpdate = (created, total) => {
+    progress_status.innerText = "Creating Embeddings ...";
+    progressDetails.innerText = `${created} of ${total} created`;
+    progressBar.style = `width: ${(created/total)*100}%`;
+}
+
+const fetchSimilaritiesUpdate = (length) => {
+    progress_status.innerHTML = "Getting paper similarities ...";
+    progressDetails.innerText = `Edges computed: ${length}`;
+    progressBar.style = "width: 100%";
+}
+
 const fetchRootPaperDetails = async () => {
     let response = await fetch(
         `http://0.0.0.0:8080/paper/${selected_paper_id}`,
@@ -16,6 +33,7 @@ const fetchRootPaperDetails = async () => {
 
     return response
 };
+
 
 const fetchReferences = async (paper) => {
     let response = await fetch(
@@ -76,8 +94,10 @@ const getReferencesToDepth = async () => {
 
     let result = [await fetchRootPaperDetails()];
     paper_map.set(0, result);
-
-    for (var i = 0; i < depth_input.value-1; i++) {
+    let length = 1;
+    fetchPapersUpdate(length);
+    
+    for (var i = 0; i < depthInput.value-1; i++) {
         let current_depth = paper_map.get(i);
         paper_map.set(i+1, []);
 
@@ -89,6 +109,8 @@ const getReferencesToDepth = async () => {
             });
 
             await Promise.all(requests).then((value) => {
+                length += value[0].length;
+                fetchPapersUpdate(length);
                 let next_depth = paper_map.get(i+1);
                 paper_map.set(i+1, [next_depth, value].flat(2));
             });
@@ -100,6 +122,7 @@ const getReferencesToDepth = async () => {
 const getAllPaperSimilarities = async (paper_map, flat_map) => {
     let edges = new Array();
     let root = paper_map.get(0)[0];
+    let count = 0;
 
     for (var i = 0; i < paper_map.size-1; i++) {
         let current_depth = paper_map.get(i);
@@ -135,6 +158,8 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
         for (var j = 0; j < reqs.length; j+=CONCURRENCY_LIMIT) {
             let slice = reqs.slice(j, j+CONCURRENCY_LIMIT);
             await Promise.all(slice).then((value) => {
+                count += value[0].length;
+                fetchSimilaritiesUpdate(count);
                 edges.push(value);
             })
         }
@@ -142,6 +167,15 @@ const getAllPaperSimilarities = async (paper_map, flat_map) => {
 
     return edges.flat(Infinity)
 };
+
+const createAllEmbeddings = async (paper_list) => {
+    let slice_size = 100
+    for (var i = 0; i < paper_list.length; i+=slice_size) {
+        let slice = paper_list.slice(i, i+slice_size);
+        await createEmbeddings(slice);
+        createEmbeddingsUpdate(i, paper_list.length);
+    }
+}
 
 const flat_paper_map = (paper_list) => {
     let flat_map = new Map();
@@ -209,7 +243,7 @@ const create_visualization = async () => {
     }
     if (DEBUG) { console.log(paper_map); }
 
-    let response = await createEmbeddings(paper_list.flat());
+    let response = await createAllEmbeddings(paper_list.flat());
     if (DEBUG) { console.log(response); }
 
     let flat_map = flat_paper_map(paper_list.flat());
@@ -287,13 +321,20 @@ const create_visualization = async () => {
                 node_color["b"]/255,
                 node_color["opacity"]];
     });
-    helios.nodeOutlineColor([1,0,0,1]);
+
+    helios.nodeOutlineColor((node) => {
+        let node_color = d3.color(colors(node.size));
+        node_color = node_color.darker(1.1);
+        return [node_color["r"]/255,
+                node_color["g"]/255,
+                node_color["b"]/255,
+                node_color["opacity"]];
+    });
     helios.nodeOutlineWidth(0.1);
-    helios.nodesGlobalOutlineOpacityScale(1);
 
     helios.onReady(() => {
         helios.zoomFactor(0.05);
-        helios.zoomFactor(30,5000);
+        helios.zoomFactor(5,5000);
     });
 
     helios.onNodeHoverStart((node, event) => {
@@ -339,6 +380,6 @@ document.getElementById("submit").addEventListener("click", () => {
     toggle_display();
     create_visualization();
 });
-selected_paper_id = "W2963403868";
-depth_input.value = 3;
+
+depthInput.value = 3;
 document.addEventListener("DOMContentLoaded", create_visualization);

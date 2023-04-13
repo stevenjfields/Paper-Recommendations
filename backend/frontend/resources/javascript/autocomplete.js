@@ -7,7 +7,7 @@ const toggle_display = () => {
 
     if (main.classList[0] == "visible") {
         main.classList = ["hidden"]
-        loading.classList = ["visible"];
+        loading.classList = ["visible position-absolute top-50 start-50 translate-middle w-25 h-25"];
     } else {
         main.classList = ["visible"];
         loading.classList = ["hidden"];

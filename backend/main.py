@@ -11,4 +11,4 @@ if __name__ == '__main__':
     if not utility.has_collection(COLLECTION_NAME):
         create_collection()
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8080, log_level='info', workers=8)
+    uvicorn.run("main:app", host="0.0.0.0", port=8080, log_level='info', workers=1)
