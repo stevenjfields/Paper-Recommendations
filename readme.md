@@ -1,5 +1,5 @@
 # Independent Study: Recommending Papers based on similarity metrics
-This repo contains my work for an independent study in place of my capstone course for a master's in data science from Indiana University. The aim of the study is to try and recommend papers to read relevant to research you plan to read.
+This repo contains my work for an independent study in place of my capstone course for a master's in data science from Indiana University. The aim of the study is to try and recommend papers to read relevant to research you want to read in order to fill in any knowledge gaps you may have.
 
 ## Tech Stack
 * Backend: Python's FastAPI
