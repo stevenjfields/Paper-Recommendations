@@ -17,23 +17,17 @@
                 </div>
             </div>
             <div id="main-content" class="hidden">
-                <div class="position-relative">
-                    <form class="card position-absolute mt-2 ms-2">
-                        <input type="text" id="search" placeholder="Enter paper title" />
-                        <div id="results" class="results"></div>
-                        <div class="depth-range">
-                            <label for="depth">Depth (2 to 5):</label>
-                            <input id="depth" type="range" min="2" max="5" value="3">
-                        </div>
-                        <input type="button" value="Find similar papers" id="submit"></input>
-                    </form>
-                </div>
-                <div id="tooltip"></div>
-                <div class="row no-gutters">
-                    <div class="col no-gutters">
-                        <div id="visualization"></div>
+                <div id="visualization" class="position-absolute"></div>
+                <form class="card position-absolute mt-2 ms-2">
+                    <input type="text" id="search" placeholder="Enter paper title" />
+                    <div id="results" class="results"></div>
+                    <div class="depth-range">
+                        <label for="depth">Depth (2 to 5):</label>
+                        <input id="depth" type="range" min="2" max="5" value="3">
                     </div>
-                </div>
+                    <input type="button" value="Find similar papers" id="submit"></input>
+                </form>
+                <div id="tooltip"></div>
             </div>
         </div>
         <script src="/static/javascript/globals.js"></script>
