@@ -21,23 +21,23 @@ const fetchPapers = async () => {
         `https://api.openalex.org/autocomplete/works?q=${search_term}`
     ).then(res => res.json());
 
-    papers = response.results;
+    return response.results;
 };
 
-const getId = () => {
+const getId = (papers) => {
     let paper = papers.find(p => p.display_name === search_term)
     let work_id = paper.id.split('/').pop();
 
     return work_id;
 }
 
-const showPapers = async() => {
-    results.innerHTML = '';
-
-    await fetchPapers(search_term);
-
+const showPapers = async () => {
     const ul = document.createElement('ul');
     ul.classList.add('papers');
+    results.innerHTML='';
+
+    let papers = [];
+    papers = await fetchPapers();
 
     papers.forEach(paper => {
         const li = document.createElement('li');
@@ -50,7 +50,7 @@ const showPapers = async() => {
         li.addEventListener('click', e => {
             search_term = li.childNodes[0].textContent;
             search_input.value = search_term;
-            selected_paper_id = getId();
+            selected_paper_id = getId(papers);
             results.innerHTML = '';
         });
 
@@ -60,7 +60,7 @@ const showPapers = async() => {
     results.appendChild(ul);
 };
 
-search_input.addEventListener('input', e => {
+search_input.addEventListener('input', async e => {
     search_term = e.target.value;
-    showPapers();
+    await showPapers();
 });

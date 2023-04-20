@@ -18,12 +18,28 @@
             </div>
             <div id="main-content" class="hidden">
                 <div id="visualization" class="position-absolute"></div>
-                <form class="card position-absolute mt-2 ms-2">
-                    <input type="text" id="search" placeholder="Enter paper title" />
+                <form class="card position-absolute mt-2 ms-2 p-2">
+                    <input type="text" id="search" class="p-1" placeholder="Enter paper title" />
                     <div id="results" class="results"></div>
-                    <div class="depth-range">
+                    <div class="depth-range p-1">
                         <label for="depth">Depth (2 to 5):</label>
                         <input id="depth" type="range" min="2" max="5" value="3">
+                    </div>
+                    <div class="row p-1">
+                        <h8 class="col">Color Scheme: </h8>
+                        <div class="col form" id="set-color-scheme">
+                            <select class="form-select-sm w-100" id="color-scheme" aria-label="Floating label select example">
+                                <option value="Cividis">Cividis</option>
+                                <option selected value="Cool">Cool</option>
+                                <option value="CubehelixDefault">Cubehelix Default</option>
+                                <option value="Inferno">Inferno</option>
+                                <option value="Magma">Magma</option>
+                                <option value="Plasma">Plasma</option>
+                                <option value="Turbo">Turbo</option>
+                                <option value="Viridis">Viridis</option>
+                                <option value="Warm">Warm</option>
+                            </select>
+                        </div>
                     </div>
                     <input type="button" value="Find similar papers" id="submit"></input>
                 </form>
@@ -33,6 +49,7 @@
         <script src="/static/javascript/globals.js"></script>
         <script src="/static/javascript/autocomplete.js"></script>
         <script src="/static/javascript/visualization.js", type="module"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js" integrity="sha384-zYPOMqeu1DAVkHiLqWBUTcbYfZ8osu1Nd6Z89ify25QV9guujx43ITvfi12/QExE" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js" integrity="sha384-Y4oOpwW3duJdCWv5ly8SCFYWqFDsfob/3GkgExXKV4idmbt98QcxXYs9UoXAB7BZ" crossorigin="anonymous"></script>
     </body>
 </html>

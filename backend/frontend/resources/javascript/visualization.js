@@ -21,7 +21,7 @@ const fetchSimilaritiesUpdate = (length) => {
 
 const fetchRootPaperDetails = async () => {
     let response = await fetch(
-        `http://0.0.0.0:8080/paper/${selected_paper_id}`,
+        `http://0.0.0.0:8080/paper/${selected_paper_id}/`,
         {
             mode: "cors",
             method: "GET",
@@ -228,9 +228,23 @@ let showTooltipForNode = (node,edges,x,y,isNew) => {
     }
 }
 
+const getColorScheme = () => {
+    return {
+        "Cool": d3.interpolateCool,
+        "Cividis": d3.interpolateCividis,
+        "Viridis": d3.interpolateViridis,
+        "Inferno": d3.interpolateInferno,
+        "Magma": d3.interpolateMagma,
+        "Plasma": d3.interpolatePlasma,
+        "Warm": d3.interpolateWarm,
+        "CubehelixDefault": d3.interpolateCubehelixDefault,
+        "Turbo": d3.interpolateTurbo
+    }[colorScheme.value];
+}
+
 const create_visualization = async () => {
     let helios = null;
-    let colors = d3.interpolateCool;
+    let colors = getColorScheme();
 
     let paper_map = await getReferencesToDepth();
     let paper_list = new Array();
