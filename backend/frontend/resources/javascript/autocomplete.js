@@ -32,29 +32,25 @@ const getId = (papers) => {
 }
 
 const showPapers = async () => {
-    const ul = document.createElement('ul');
-    ul.classList.add('papers');
     results.innerHTML='';
 
     let papers = [];
     papers = await fetchPapers();
 
-    papers.forEach(paper => {
-        const li = document.createElement('li');
-        li.classList.add('paper-item');
+    // take last 10 as a hacky fix for more than 10 items being in
+    // the papers list
+    papers.slice(-10).forEach(paper => {
+        const item = document.createElement('div');
+        item.innerHTML = paper.display_name;
 
-        const p = document.createElement('p')
-        p.innerHTML = paper.display_name;
-
-        li.appendChild(p)
-        li.addEventListener('click', e => {
-            search_term = li.childNodes[0].textContent;
+        item.addEventListener('click', e => {
+            search_term = paper.display_name;
             search_input.value = search_term;
             selected_paper_id = getId(papers);
             results.innerHTML = '';
         });
 
-        ul.appendChild(li);
+        results.append(item)
     });
 
     results.appendChild(ul);

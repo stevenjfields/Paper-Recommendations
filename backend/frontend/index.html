@@ -18,9 +18,11 @@
             </div>
             <div id="main-content" class="hidden">
                 <div id="visualization" class="position-absolute"></div>
-                <form class="card position-absolute mt-2 ms-2 p-2">
-                    <input type="text" id="search" class="p-1" placeholder="Enter paper title" />
-                    <div id="results" class="results"></div>
+                <form class="card position-absolute mt-2 ms-2 p-2" autocomplete="off">
+                    <div class="autocomplete">
+                        <input type="text" id="search" class="p-1" placeholder="Enter paper title" />
+                        <div id="results" class="autocomplete-items"></div>
+                    </div>
                     <div class="depth-range p-1">
                         <label for="depth">Depth (2 to 5):</label>
                         <input id="depth" type="range" min="2" max="5" value="3">
