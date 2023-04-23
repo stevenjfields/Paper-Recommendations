@@ -52,8 +52,6 @@ const showPapers = async () => {
 
         results.append(item)
     });
-
-    results.appendChild(ul);
 };
 
 search_input.addEventListener('input', async e => {
