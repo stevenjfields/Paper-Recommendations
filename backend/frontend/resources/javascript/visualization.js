@@ -257,8 +257,7 @@ const create_visualization = async () => {
     }
     if (DEBUG) { console.log(paper_map); }
 
-    let response = await createAllEmbeddings(paper_list.flat());
-    if (DEBUG) { console.log(response); }
+    await createAllEmbeddings(paper_list.flat());
 
     let flat_map = flat_paper_map(paper_list.flat());
     let edges = await getAllPaperSimilarities(paper_map, flat_map)

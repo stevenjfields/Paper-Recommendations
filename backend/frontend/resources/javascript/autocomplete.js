@@ -3,8 +3,6 @@ const toggle_display = () => {
     main = document.getElementById("main-content");
     loading = document.getElementById("loading-screen");
 
-    console.log(main.classList);
-
     if (main.classList[0] == "visible") {
         main.classList = ["hidden"]
         loading.classList = ["visible position-absolute top-50 start-50 translate-middle w-25 h-25"];
@@ -12,8 +10,6 @@ const toggle_display = () => {
         main.classList = ["visible"];
         loading.classList = ["hidden"];
     }
-
-    console.log(main);
 }
 
 const fetchPapers = async () => {
