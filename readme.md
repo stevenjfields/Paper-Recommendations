@@ -33,9 +33,12 @@ To run the webserver, you'll need python 3.6+ installed, and to install the `req
 
 `pip install -r requirements.txt`
 
+If you have an nvidia gpu however, you can instead install the `requirements-nvidia.txt` file to benefit from gpu acceleration:
+`pip install -r requirements-nvidia.txt`
+
 To run the web app, run the following command from the backend folder:
 
 `python main.py`
 
-To shut down the server use `Ctrl + C`.
+You can then interact with the application at http://0.0.0.0:8080/. To shut down the server use `Ctrl + C`.
 
