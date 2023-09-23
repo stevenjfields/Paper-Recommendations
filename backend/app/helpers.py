@@ -15,7 +15,7 @@ def parse_article(result: str) -> Article:
     landing_page_url = result["primary_location"]["landing_page_url"] if result["primary_location"] else None
     inverted_abstract = result['abstract_inverted_index']
     authors = []
-    host_venue = result['host_venue']['publisher']
+    host_venue = ""
     institutions = []
 
     for authorship in result['authorships']:

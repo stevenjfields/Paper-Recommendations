@@ -5,6 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Main.py",
+            "type": "python",
+            "request": "launch",
+            "cwd": "./backend/",
+            "program": "main.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",

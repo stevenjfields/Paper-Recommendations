@@ -22,11 +22,11 @@ From there we average out these two scores and use it to determine the size of n
 ## Local Setup: Milvus
 In order to get a local standalone version of Milvus up and running, run the following docker-compose command:
 
-`docker-compose -f ./docker/docker-compose.milvus.yml up`
+`docker compose -f ./docker/docker-compose.milvus.yml up`
 
 Then to shut the servers down simply run the following:
 
-`docker-compose -f ./docker/docker-compose.milvus.yml down`
+`docker compose -f ./docker/docker-compose.milvus.yml down`
 
 ## Local Setup: Web App
 To run the webserver, you'll need python 3.6+ installed, and to install the `requirements.txt` file. This can be done with the following command:
