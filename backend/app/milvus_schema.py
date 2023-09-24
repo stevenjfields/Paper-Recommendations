@@ -1,3 +1,4 @@
+import os
 
 from pymilvus import (
     connections,
@@ -11,11 +12,15 @@ from pymilvus import (
 from .constants import COLLECTION_NAME
 
 def establish_connection():
-  connections.connect(
-    alias="default", 
-    host='localhost', 
-    port='19530'
-  )
+  uri = os.getenv("MILVUS_ADDRESS")
+  if uri:
+    connections.connect(alias="default", uri=f"http://{uri}")
+  else:
+    connections.connect(
+      alias="default", 
+      host="localhost",
+      port="19530"
+    )
 
 def create_collection():
   fields = [

@@ -6,10 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import requests
 import json
+from logging.config import dictConfig
+import logging
 
 from .constants import BASE_WORKS_URL, WORKS_ID_FILTER
+from .log_config import LogConfig
 from .models import Article, WeightedEdge
 from .helpers import parse_article, create_embeddings, get_similarities
+
+logger = logging.getLogger("backend_app")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="frontend")
