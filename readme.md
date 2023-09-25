@@ -19,26 +19,22 @@ From there we average out these two scores and use it to determine the size of n
 * Frontend: Javascript and Helios-web
 * PyTorch, OAG-Bert, and Milvus for creating and storing embeddings.
 
-## Local Setup: Milvus
-In order to get a local standalone version of Milvus up and running, run the following docker-compose command:
+## Local Setup
+To run this locally you'll need docker installed, and optionally an nvidia graphics card and the nvidia container toolkit installed. Attached below are docs for each:
 
-`docker compose -f ./docker/docker-compose.milvus.yml up`
+- [docker](https://docs.docker.com/engine/install/)
+- [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
-Then to shut the servers down simply run the following:
+### Running without GPU acceleration
+Run the following command from the root folder of this project:
 
-`docker compose -f ./docker/docker-compose.milvus.yml down`
+`sudo docker compose -f docker-compose.yml run --service-ports app`
 
-## Local Setup: Web App
-To run the webserver, you'll need python 3.6+ installed, and to install the `requirements.txt` file. This can be done with the following command:
+### Running with GPU accelertaion
+Run the following command from the root folder of this project:
 
-`pip install -r requirements.txt`
+`sudo docker compose -f docker-compose.yml run --service-ports app-nvidia`
 
-If you have an nvidia gpu however, you can instead install the `requirements-nvidia.txt` file to benefit from gpu acceleration:
-`pip install -r requirements-nvidia.txt`
-
-To run the web app, run the following command from the backend folder:
-
-`python main.py`
-
-You can then interact with the application at http://0.0.0.0:8080/. To shut down the server use `Ctrl + C`.
-
+### Shut down
+To bring all services down, run the following:
+`sudo docker compose -f docker-compose.yml down`

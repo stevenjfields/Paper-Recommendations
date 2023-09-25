@@ -58,9 +58,10 @@ services:
       - "etcd"
       - "minio"
 
-  app:
+  app-nvidia:
+    container_name: app-nvidia
     build:
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-nvidia
     command: python main.py
     restart: always
     environment:
@@ -77,6 +78,20 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+
+  app:
+    container_name: app
+    build:
+      dockerfile: Dockerfile
+    command: python main.py
+    restart: always
+    environment:
+      MILVUS_ADDRESS: milvus-standalone:19530
+    ports:
+      - "8080:8080"
+    depends_on:
+      standalone:
+        condition: service_healthy
 
 volumes:
   minio_storage: {}
