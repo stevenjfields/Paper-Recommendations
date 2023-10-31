@@ -1,5 +1,5 @@
-import logging
-from .constants import COLLECTION_NAME, LOGGER_NAME
+import logging 
+from .constants import COLLECTION_NAME, LOGGER_TITLE
 from .models import Article, WeightedEdge
 from .milvus_schema import establish_connection
 
@@ -10,7 +10,7 @@ import torch
 import asyncio
 import numpy as np
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger("paper_recommender")
 
 def parse_article(result: str) -> Article:
     work_id = result["id"].split('/')[-1]

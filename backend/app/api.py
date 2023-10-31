@@ -9,12 +9,12 @@ import json
 from logging.config import dictConfig
 import logging
 
-from .constants import BASE_WORKS_URL, WORKS_ID_FILTER, LOGGER_NAME
-from .log_config import LogConfig
+from .constants import BASE_WORKS_URL, WORKS_ID_FILTER
 from .models import Article, WeightedEdge
 from .helpers import parse_article, create_embeddings, get_similarities
+from .utils.logger import AppLogger
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = AppLogger.__call__().get_logger()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="frontend")
@@ -26,7 +26,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"] ,
 )
 
 app.mount("/static/", StaticFiles(directory="./frontend/resources/"), "static")
