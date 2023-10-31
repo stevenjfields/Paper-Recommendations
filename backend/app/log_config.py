@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 
+from .constants import LOGGER_TITLE
 class LogConfig(BaseModel):
     """Logging configuration to be set for the server"""
 
-    LOGGER_NAME: str = "backend_app"
+    LOGGER_NAME: str = LOGGER_TITLE
     LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
     LOG_LEVEL: str = "DEBUG"
 

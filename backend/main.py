@@ -4,7 +4,7 @@ import uvicorn
 from pymilvus import utility
 
 from app.api import app
-from app.constants import COLLECTION_NAME
+from app.constants import COLLECTION_NAME, LOGGER_TITLE
 from app.milvus_schema import establish_connection, create_collection
 from app.log_config import LogConfig
 
@@ -15,6 +15,6 @@ if __name__ == '__main__':
         create_collection()
 
     dictConfig(LogConfig().dict()) # dict is deprecated need to look into alternative later
-    logger = logging.getLogger("backend_app")
+    logger = logging.getLogger(LOGGER_TITLE)
 
     uvicorn.run("main:app", host="0.0.0.0", port=8080, log_level='info', workers=1)
