@@ -58,8 +58,25 @@ services:
       - "etcd"
       - "minio"
 
-  app-nvidia:
-    container_name: app-nvidia
+  postgres-local:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: papers
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "papers"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+    ports: 
+      - "5432:5432"
+
+  paper-recommendations-nvidia:
+    container_name: paper-recommendations-nvidia
     build:
       dockerfile: Dockerfile-nvidia
     command: python main.py
@@ -68,7 +85,11 @@ services:
       MILVUS_ADDRESS: milvus-standalone:19530
     ports:
       - "8080:8080"
+    volumes:
+      - ./backend:/code
     depends_on:
+      postgres-local:
+        condition: service_healthy
       standalone:
         condition: service_healthy
     deploy:
@@ -79,8 +100,8 @@ services:
               count: 1
               capabilities: [gpu]
 
-  app:
-    container_name: app
+  paper-recommendations:
+    container_name: paper-recommendations
     build:
       dockerfile: Dockerfile
     command: python main.py
@@ -90,6 +111,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      postgres-local:
+        condition: service_started
       standalone:
         condition: service_healthy
 
@@ -97,7 +120,7 @@ volumes:
   minio_storage: {}
   milvus_storage: {}
   milvus_etcd_storage: {}
-
+  postgres_storage: {}
 networks:
   default:
-    name: milvus
+    name: paper-recommender

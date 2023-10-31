@@ -28,12 +28,12 @@ To run this locally you'll need docker installed, and optionally an nvidia graph
 ### Running without GPU acceleration
 Run the following command from the root folder of this project:
 
-`sudo docker compose -f docker-compose.yml run --service-ports app`
+`sudo docker compose -f docker-compose.yml run --service-ports paper-recommendations`
 
 ### Running with GPU accelertaion
 Run the following command from the root folder of this project:
 
-`sudo docker compose -f docker-compose.yml run --service-ports app-nvidia`
+`sudo docker compose -f docker-compose.yml run --service-ports paper-recommendations-nvidia`
 
 ### Shut down
 To bring all services down, run the following:

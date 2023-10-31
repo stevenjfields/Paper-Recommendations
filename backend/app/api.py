@@ -9,12 +9,12 @@ import json
 from logging.config import dictConfig
 import logging
 
-from .constants import BASE_WORKS_URL, WORKS_ID_FILTER
+from .constants import BASE_WORKS_URL, WORKS_ID_FILTER, LOGGER_NAME
 from .log_config import LogConfig
 from .models import Article, WeightedEdge
 from .helpers import parse_article, create_embeddings, get_similarities
 
-logger = logging.getLogger("backend_app")
+logger = logging.getLogger(LOGGER_NAME)
 
 app = FastAPI()
 templates = Jinja2Templates(directory="frontend")
@@ -33,6 +33,10 @@ app.mount("/static/", StaticFiles(directory="./frontend/resources/"), "static")
 
 @app.get("/paper/{work_id}/")
 async def get_paper(work_id: str) -> Article:
+    logger.info("info")
+    logger.debug("debug")
+    logger.warning("warning")
+    logger.error("error")
     req = requests.get(BASE_WORKS_URL + f"/{work_id}")
     res = json.loads(req.content)
     article = parse_article(res)

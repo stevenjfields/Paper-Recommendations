@@ -1,5 +1,5 @@
 import logging
-from .constants import COLLECTION_NAME
+from .constants import COLLECTION_NAME, LOGGER_NAME
 from .models import Article, WeightedEdge
 from .milvus_schema import establish_connection
 
@@ -10,7 +10,7 @@ import torch
 import asyncio
 import numpy as np
 
-logger = logging.getLogger("backend_app")
+logger = logging.getLogger(LOGGER_NAME)
 
 def parse_article(result: str) -> Article:
     work_id = result["id"].split('/')[-1]
@@ -75,7 +75,7 @@ def create_embeddings(papers: List[Article]):
 
     _, model = oagbert("oagbert-v2")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logger.info(device)
+    logger.debug(device)
     model.to(device)
 
     for paper in papers:
