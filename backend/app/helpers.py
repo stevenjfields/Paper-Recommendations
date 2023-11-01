@@ -1,7 +1,8 @@
-import logging 
 from .constants import COLLECTION_NAME, LOGGER_TITLE
 from .models import Article, WeightedEdge
 from .milvus_schema import establish_connection
+from .utils.logger import AppLogger
+from .utils.oag_bert_model import OAGBertModel
 
 from typing import List
 from pymilvus import utility, Collection
@@ -10,7 +11,7 @@ import torch
 import asyncio
 import numpy as np
 
-logger = logging.getLogger("paper_recommender")
+logger = AppLogger().get_logger()
 
 def parse_article(result: str) -> Article:
     work_id = result["id"].split('/')[-1]
@@ -72,11 +73,10 @@ def create_embeddings(papers: List[Article]):
         ids_in_db = [item["work_id"] for item in db_response]
         ids_to_embed = list(set(ids_to_embed) - set(ids_in_db))
 
-
-    _, model = oagbert("oagbert-v2")
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logger.debug(device)
-    model.to(device)
+    # Leaving the code below just because this change caused like a 2x speedup during this function
+    # https://media.giphy.com/media/2UCt7zbmsLoCXybx6t/giphy.gif
+    #_, model = oagbert("oagbert-v2")
+    device, model = OAGBertModel().get_model()
 
     for paper in papers:
         if paper.work_id in ids_to_embed:

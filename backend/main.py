@@ -1,5 +1,4 @@
 import os
-import logging
 from logging.config import dictConfig
 import uvicorn
 from pymilvus import utility
@@ -9,7 +8,7 @@ from app.constants import COLLECTION_NAME, LOGGER_TITLE, SETTINGS
 from app.milvus_schema import establish_connection, create_collection
 from app.utils.logger import AppLogger
 
-logger = AppLogger.__call__().get_logger()
+logger = AppLogger().get_logger()
 
 if __name__ == '__main__':
     # Create Milvus Schema if it doesn't already exist

@@ -7,14 +7,13 @@ from typing import List, Optional
 import requests
 import json
 from logging.config import dictConfig
-import logging
 
 from .constants import BASE_WORKS_URL, WORKS_ID_FILTER
 from .models import Article, WeightedEdge
 from .helpers import parse_article, create_embeddings, get_similarities
 from .utils.logger import AppLogger
 
-logger = AppLogger.__call__().get_logger()
+logger = AppLogger().get_logger()
 
 app = FastAPI()
 templates = Jinja2Templates(directory="frontend")
