@@ -3,10 +3,10 @@ from logging.config import dictConfig
 import uvicorn
 from pymilvus import utility
 
-from app.api import app
-from app.constants import COLLECTION_NAME, LOGGER_TITLE, SETTINGS
-from app.milvus_schema import establish_connection, create_collection
-from app.utils.logger import AppLogger
+from backend.api import app
+from backend.constants import COLLECTION_NAME, LOGGER_TITLE, SETTINGS
+from backend.milvus_schema import establish_connection, create_collection
+from backend.utils.logger import AppLogger
 
 logger = AppLogger().get_logger()
 

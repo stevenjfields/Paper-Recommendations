@@ -8,10 +8,10 @@ import requests
 import json
 from logging.config import dictConfig
 
-from .constants import BASE_WORKS_URL, WORKS_ID_FILTER
-from .models import Article, WeightedEdge
-from .helpers import parse_article, create_embeddings, get_similarities
-from .utils.logger import AppLogger
+from backend.constants import BASE_WORKS_URL, WORKS_ID_FILTER
+from backend.models import Article, WeightedEdge
+from backend.helpers import parse_article, create_embeddings, get_similarities
+from backend.utils.logger import AppLogger
 
 logger = AppLogger().get_logger()
 
@@ -32,10 +32,6 @@ app.mount("/static/", StaticFiles(directory="./frontend/resources/"), "static")
 
 @app.get("/paper/{work_id}/")
 async def get_paper(work_id: str) -> Article:
-    logger.info("info")
-    logger.debug("debug")
-    logger.warning("warning")
-    logger.error("error")
     req = requests.get(BASE_WORKS_URL + f"/{work_id}")
     res = json.loads(req.content)
     article = parse_article(res)

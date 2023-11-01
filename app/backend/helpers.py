@@ -1,8 +1,8 @@
-from .constants import COLLECTION_NAME, LOGGER_TITLE
-from .models import Article, WeightedEdge
-from .milvus_schema import establish_connection
-from .utils.logger import AppLogger
-from .utils.oag_bert_model import OAGBertModel
+from backend.constants import COLLECTION_NAME, LOGGER_TITLE
+from backend.models import Article, WeightedEdge
+from backend.milvus_schema import establish_connection
+from backend.utils.logger import AppLogger
+from backend.utils.oag_bert_model import OAGBertModel
 
 from typing import List
 from pymilvus import utility, Collection

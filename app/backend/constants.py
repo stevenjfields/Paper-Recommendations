@@ -20,6 +20,8 @@ PROD_SETTINGS = {
     "server_settings": {
         "host": "0.0.0.0",
         "port": 8080,
+        "log_config": "./log_config.ini",
+        "log_level": "info",
         "workers": 8
     }
 }

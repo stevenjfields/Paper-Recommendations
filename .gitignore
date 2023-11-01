@@ -1,7 +1,7 @@
 /venv/
 /.ipynb_checkpoints/
 /saved/
-/backend/saved/
+/app/saved/
 /embeddings/
 /docker/volumes
 *.pyc

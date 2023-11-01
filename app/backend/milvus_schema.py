@@ -9,7 +9,7 @@ from pymilvus import (
     Collection
 )
 
-from .constants import COLLECTION_NAME
+from backend.constants import COLLECTION_NAME
 
 def establish_connection():
   uri = os.getenv("MILVUS_ADDRESS")

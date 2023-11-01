@@ -86,7 +86,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./backend:/code
+      - ./app:/app
     depends_on:
       postgres-local:
         condition: service_healthy

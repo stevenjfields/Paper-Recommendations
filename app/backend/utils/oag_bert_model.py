@@ -1,5 +1,5 @@
 from cogdl.oag import oagbert
-from app.utils.singleton import SingletonMeta
+from backend.utils.singleton import SingletonMeta
 import torch
 
 class OAGBertModel(metaclass=SingletonMeta):
