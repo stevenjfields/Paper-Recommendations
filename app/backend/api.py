@@ -6,12 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 import requests
 import json
-from logging.config import dictConfig
 
 from backend.constants import BASE_WORKS_URL, WORKS_ID_FILTER
-from backend.models import Article, WeightedEdge
-from backend.helpers import parse_article, create_embeddings, get_similarities
+from backend.models import WeightedEdge
+from backend.pydantic_models.article import ArticleFactory, Article
+from backend.helpers import create_embeddings, get_similarities
 from backend.utils.logger import AppLogger
+#from backend.utils.open_alex_client import OpenAlexClient
 
 logger = AppLogger().get_logger()
 
@@ -34,7 +35,7 @@ app.mount("/static/", StaticFiles(directory="./frontend/resources/"), "static")
 async def get_paper(work_id: str) -> Article:
     req = requests.get(BASE_WORKS_URL + f"/{work_id}")
     res = json.loads(req.content)
-    article = parse_article(res)
+    article = ArticleFactory.from_open_alex_response(res)
     return article
 
 @app.post("/references/")
@@ -49,7 +50,7 @@ async def get_references(parent: Article) -> Optional[List[Article]]:
         req = requests.get(BASE_WORKS_URL + WORKS_ID_FILTER + query)
         res = json.loads(req.content)
         
-        refs = [parse_article(result) for result in res["results"]]
+        refs = [ArticleFactory.from_open_alex_response(result) for result in res["results"]]
         references.extend(refs)
     return references
 
