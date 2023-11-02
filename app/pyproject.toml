@@ -6,12 +6,12 @@ authors = ["Steven Fields"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.10"
 torch = "^1.13.1"
 fastapi = "^0.94.1"
 Jinja2 = "3.*"
 pymilvus = "2.2.7"
-cogdl = "0.5.3"
+cogdl = "0.6"
 uvicorn = "0.21.0"
 rich = "13.6.0"
 

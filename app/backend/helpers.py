@@ -1,5 +1,6 @@
 from backend.constants import COLLECTION_NAME, LOGGER_TITLE
-from backend.models import Article, WeightedEdge
+from backend.pydantic_models.article import Article
+from backend.pydantic_models.weighted_edge import WeightedEdge
 from backend.milvus_schema import establish_connection
 from backend.utils.logger import AppLogger
 from backend.utils.oag_bert_model import OAGBertModel
@@ -12,45 +13,6 @@ import asyncio
 import numpy as np
 
 logger = AppLogger().get_logger()
-
-def parse_article(result: str) -> Article:
-    work_id = result["id"].split('/')[-1]
-    title = result["title"]
-    landing_page_url = result["primary_location"]["landing_page_url"] if result["primary_location"] else None
-    inverted_abstract = result['abstract_inverted_index']
-    authors = []
-    host_venue = ""
-    institutions = []
-
-    for authorship in result['authorships']:
-        author = authorship.get("author", None)
-        institutes = authorship.get("institutions", None)
-        if author:
-            name = author.get("display_name", None)
-            if name:
-                authors.append(name)
-        if institutes:
-            for institute in institutes:
-                institution = institute.get("display_name", None)
-                if institution:
-                    institutions.append(institution)
-
-    concepts = [concept['display_name'] for concept in result['concepts'] if float(concept['score']) > 0.5]
-    referenced_works = [work.split('/')[-1] for work in result['referenced_works']]
-    related_works = [work.split('/')[-1] for work in result['related_works']]
-
-    return Article(
-        work_id=work_id,
-        title=title if title else "",
-        landing_page_url=landing_page_url if landing_page_url else "",
-        inverted_abstract=inverted_abstract if inverted_abstract else {"": [0]},
-        authors=authors,
-        host_venue=host_venue if host_venue else "",
-        affiliations=list(set(institutions)),
-        concepts=concepts if concepts else [],
-        references=referenced_works if referenced_works else [],
-        related=related_works if related_works else []
-    )
 
 def ids_to_query(ids: List[str]) -> str:
     ids_query = [f'"{work_id}"' for work_id in ids]

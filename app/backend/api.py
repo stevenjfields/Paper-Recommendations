@@ -8,11 +8,11 @@ import requests
 import json
 
 from backend.constants import BASE_WORKS_URL, WORKS_ID_FILTER
-from backend.models import WeightedEdge
-from backend.pydantic_models.article import ArticleFactory, Article
+from backend.pydantic_models.article import Article, ArticleFactory
+from backend.pydantic_models.weighted_edge import WeightedEdge
 from backend.helpers import create_embeddings, get_similarities
 from backend.utils.logger import AppLogger
-#from backend.utils.open_alex_client import OpenAlexClient
+from backend.utils.open_alex_client import OpenAlexClient
 
 logger = AppLogger().get_logger()
 
@@ -33,24 +33,23 @@ app.mount("/static/", StaticFiles(directory="./frontend/resources/"), "static")
 
 @app.get("/paper/{work_id}/")
 async def get_paper(work_id: str) -> Article:
-    req = requests.get(BASE_WORKS_URL + f"/{work_id}")
-    res = json.loads(req.content)
-    article = ArticleFactory.from_open_alex_response(res)
+    client = OpenAlexClient()
+    paper = client.get_work_by_id(work_id)
+    article = ArticleFactory.from_open_alex_response(paper)
     return article
 
 @app.post("/references/")
 async def get_references(parent: Article) -> Optional[List[Article]]:
+    client = OpenAlexClient()
     references = []
-    if len(parent.references) > 0:
+    if parent.references:
         queries = parent.fetch_references_queries()
     else:
         queries = parent.fetch_related_queries()
             
     for query in queries:
-        req = requests.get(BASE_WORKS_URL + WORKS_ID_FILTER + query)
-        res = json.loads(req.content)
-        
-        refs = [ArticleFactory.from_open_alex_response(result) for result in res["results"]]
+        papers = client.get_works_by_filter(query)
+        refs = [ArticleFactory.from_open_alex_response(paper) for paper in papers["results"]]
         references.extend(refs)
     return references
 
