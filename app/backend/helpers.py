@@ -64,7 +64,13 @@ def create_embeddings(papers: List[Article]):
             pooled_normalized = torch.nn.functional.normalize(pooled_output, p=2, dim=1)
 
             collection.insert([
-                [paper.work_id], 
+                [paper.work_id],
+                [paper.landing_page_url],
+                [paper.authors],
+                [paper.host_venue],
+                [paper.concepts],
+                [paper.references],
+                [paper.related],
                 [pooled_normalized.tolist()[0]]
             ])
     

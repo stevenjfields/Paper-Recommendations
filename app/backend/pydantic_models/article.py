@@ -5,7 +5,7 @@ class Article(BaseModel):
     work_id: str
     title: str = ""
     landing_page_url: str = ""
-    inverted_abstract: Dict[str, List[int]] = {"": [0]}
+    inverted_abstract: Optional[Dict[str, List[int]]] = None
     authors: Optional[List[str]]
     host_venue: str = ""
     affiliations: List[str] = []
@@ -14,6 +14,9 @@ class Article(BaseModel):
     related: List[str] = []
 
     def get_abstract(self) -> str:
+        if not self.inverted_abstract:
+            return ""
+        
         abstract = dict()
         for k, v in self.inverted_abstract.items():
             for i in v:
@@ -81,3 +84,16 @@ class ArticleFactory:
             references=referenced_works if referenced_works else [],
             related=related_works if related_works else []
         )
+    
+    @staticmethod
+    def from_open_alex_query(query_response):
+        articles = []
+        for paper in query_response["results"]:
+            article = ArticleFactory.from_open_alex_response(paper)
+            articles.append(article)
+        
+        return articles
+    
+    @staticmethod
+    def from_milvus_query(milvus_response):
+        pass

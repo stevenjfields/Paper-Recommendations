@@ -25,10 +25,17 @@ def establish_connection():
 def create_collection():
   fields = [
       FieldSchema(name='work_id', dtype=DataType.VARCHAR, max_length=32, is_primary=True),
-      FieldSchema(name='embeddings', dtype=DataType.FLOAT_VECTOR, dim=768)
+      FieldSchema(name='title', dtype=DataType.VARCHAR, max_length=512),
+      FieldSchema(name='landing_page_url', dtype=DataType.VARCHAR, max_length=512),
+      FieldSchema(name='authors', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_length=128, max_capacity=32),
+      FieldSchema(name='host_venue', dtype=DataType.VARCHAR, max_length=512),
+      FieldSchema(name='concepts', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_length=64, max_capacity=128),
+      FieldSchema(name='references', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_length=32, max_capacity=128),
+      FieldSchema(name='related', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_length=32, max_capacity=128),
+      FieldSchema(name='embeddings', dtype=DataType.FLOAT_VECTOR, dim=768),
   ]
 
-  schema = CollectionSchema(fields, "Testing")
+  schema = CollectionSchema(fields, "Works")
   paper_trail_collection = Collection(COLLECTION_NAME, schema)
 
   index_params = {

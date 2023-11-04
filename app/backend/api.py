@@ -49,7 +49,7 @@ async def get_references(parent: Article) -> Optional[List[Article]]:
             
     for query in queries:
         papers = client.get_works_by_filter(query)
-        refs = [ArticleFactory.from_open_alex_response(paper) for paper in papers["results"]]
+        refs = ArticleFactory.from_open_alex_query(papers)
         references.extend(refs)
     return references
 
