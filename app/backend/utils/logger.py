@@ -1,10 +1,11 @@
 import logging
 
 from rich.console import Console
-from rich.logging import RichHandler 
+from rich.logging import RichHandler
 
 
 from backend.utils.singleton import SingletonMeta
+
 
 class AppLogger(metaclass=SingletonMeta):
     _logger = None
@@ -15,6 +16,9 @@ class AppLogger(metaclass=SingletonMeta):
     def get_logger(self):
         return self._logger
 
+
 class RichConsoleHandler(RichHandler):
     def __init__(self, width=200, style=None, **kwargs):
-        super().__init__(console=Console(color_system="256", width=width, style=style), **kwargs) 
+        super().__init__(
+            console=Console(color_system="256", width=width, style=style), **kwargs
+        )

@@ -38,7 +38,7 @@ services:
 
   standalone:
     container_name: milvus-standalone
-    image: milvusdb/milvus:v2.3.0
+    image: milvusdb/milvus:v2.3.2
     command: ["milvus", "run", "standalone"]
     environment:
       ETCD_ENDPOINTS: etcd:2379
@@ -58,23 +58,6 @@ services:
       - "etcd"
       - "minio"
 
-  postgres-local:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: papers
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-d", "papers"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-      start_period: 30s
-    volumes:
-      - postgres_storage:/var/lib/postgresql/data
-    ports: 
-      - "5432:5432"
-
   paper-recommendations-nvidia:
     container_name: paper-recommendations-nvidia
     build:
@@ -88,8 +71,6 @@ services:
     volumes:
       - ./app:/app
     depends_on:
-      postgres-local:
-        condition: service_healthy
       standalone:
         condition: service_healthy
     deploy:
@@ -111,8 +92,6 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres-local:
-        condition: service_started
       standalone:
         condition: service_healthy
 

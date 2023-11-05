@@ -1,9 +1,9 @@
 from backend.constants import COLLECTION_NAME, LOGGER_TITLE
 from backend.pydantic_models.article import Article
 from backend.pydantic_models.weighted_edge import WeightedEdge
-from backend.milvus_schema import establish_connection
 from backend.utils.logger import AppLogger
 from backend.utils.oag_bert_model import OAGBertModel
+from backend.utils.milvus_client import MilvusClient
 
 from typing import List
 from pymilvus import utility, Collection
@@ -11,24 +11,21 @@ from cogdl.oag import oagbert
 import torch
 import asyncio
 import numpy as np
+import json
 
 logger = AppLogger().get_logger()
 
+
 def ids_to_query(ids: List[str]) -> str:
     ids_query = [f'"{work_id}"' for work_id in ids]
-    return ', '.join(ids_query)
+    return ", ".join(ids_query)
+
 
 def create_embeddings(papers: List[Article]):
-    establish_connection()
-    collection = Collection(COLLECTION_NAME)
-    collection.load()
+    milvus_client = MilvusClient()
 
     work_ids = [paper.work_id for paper in papers]
-    work_ids_query = ids_to_query(work_ids)
-    db_response = collection.query(
-        expr=f"work_id in [{work_ids_query}]",
-        output_fields=["work_id"]
-    )
+    db_response = milvus_client.query_by_work_ids(work_ids)
 
     ids_to_embed = work_ids
     if len(db_response) > 0:
@@ -37,61 +34,65 @@ def create_embeddings(papers: List[Article]):
 
     # Leaving the code below just because this change caused like a 2x speedup during this function
     # https://media.giphy.com/media/2UCt7zbmsLoCXybx6t/giphy.gif
-    #_, model = oagbert("oagbert-v2")
-    device, model = OAGBertModel().get_model()
+    # _, model = oagbert("oagbert-v2")
+
+    def needs_embedded(item):
+        return item.work_id in ids_to_embed
+
+    papers = list(filter(needs_embedded, papers))
+
+    if papers:
+        device, model = OAGBertModel().get_model()
+        embeddings = list()
+    else:
+        return
 
     for paper in papers:
-        if paper.work_id in ids_to_embed:
-            input_ids, input_masks, token_type_ids, masked_lm_labels, position_ids, position_ids_second, masked_positions, num_spans = model.build_inputs(
-            title=paper.title, 
-            abstract=paper.get_abstract(), 
-            venue=paper.host_venue, 
-            authors=paper.authors, 
-            concepts=paper.concepts, 
-            affiliations=paper.affiliations
-            )
+        (
+            input_ids,
+            input_masks,
+            token_type_ids,
+            masked_lm_labels,
+            position_ids,
+            position_ids_second,
+            masked_positions,
+            num_spans,
+        ) = model.build_inputs(
+            title=paper.title,
+            abstract=paper.get_abstract(),
+            venue=paper.host_venue,
+            authors=paper.authors,
+            concepts=paper.concepts,
+            affiliations=paper.affiliations,
+        )
 
-            _, pooled_output = model.bert.forward(
-                input_ids=torch.LongTensor(input_ids).unsqueeze(0).to(device),
-                token_type_ids=torch.LongTensor(token_type_ids).unsqueeze(0).to(device),
-                attention_mask=torch.LongTensor(input_masks).unsqueeze(0).to(device),
-                output_all_encoded_layers=False,
-                checkpoint_activations=False,
-                position_ids=torch.LongTensor(position_ids).unsqueeze(0).to(device),
-                position_ids_second=torch.LongTensor(position_ids_second).unsqueeze(0).to(device)
-            )
+        _, pooled_output = model.bert.forward(
+            input_ids=torch.LongTensor(input_ids).unsqueeze(0).to(device),
+            token_type_ids=torch.LongTensor(token_type_ids).unsqueeze(0).to(device),
+            attention_mask=torch.LongTensor(input_masks).unsqueeze(0).to(device),
+            output_all_encoded_layers=False,
+            checkpoint_activations=False,
+            position_ids=torch.LongTensor(position_ids).unsqueeze(0).to(device),
+            position_ids_second=torch.LongTensor(position_ids_second)
+            .unsqueeze(0)
+            .to(device),
+        )
 
-            pooled_normalized = torch.nn.functional.normalize(pooled_output, p=2, dim=1)
+        pooled_normalized = torch.nn.functional.normalize(pooled_output, p=2, dim=1)
+        embeddings.append(pooled_normalized.tolist()[0])
 
-            collection.insert([
-                [paper.work_id],
-                [paper.landing_page_url],
-                [paper.authors],
-                [paper.host_venue],
-                [paper.concepts],
-                [paper.references],
-                [paper.related],
-                [pooled_normalized.tolist()[0]]
-            ])
-    
-    collection.flush() # allows inserted data to be indexed
+    milvus_client.insert_embedded_articles(papers, embeddings)
+
 
 async def compute_similarities(target: Article, sources: List[Article]):
-    establish_connection()
-    collection = Collection(COLLECTION_NAME)
+    milvus_client = MilvusClient()
 
-    target_embeddings = collection.query(
-        expr = f'work_id == "{target.work_id}"',
-        output_fields=['embeddings']
-    )[0]['embeddings']
+    target_embeddings = milvus_client.query_by_work_id(target.work_id, ["embeddings"])[
+        0
+    ]["embeddings"]
 
     source_ids = [source.work_id for source in sources]
-    source_id_query = ids_to_query(source_ids)
-
-    results = collection.query(
-        f'work_id in [{source_id_query}]',
-        output_fields=["work_id", "embeddings"],
-    )
+    results = milvus_client.query_by_work_ids(source_ids, ["embeddings"])
 
     sims = {}
     for result in results:
@@ -104,7 +105,9 @@ async def compute_similarities(target: Article, sources: List[Article]):
     return sims
 
 
-async def get_similarities(root: Article, target: Article, sources: List[Article]) -> List[WeightedEdge]:
+async def get_similarities(
+    root: Article, target: Article, sources: List[Article]
+) -> List[WeightedEdge]:
     if root == target:
         root_sims = target_sims = await compute_similarities(root, sources)
     else:
@@ -131,8 +134,8 @@ async def get_similarities(root: Article, target: Article, sources: List[Article
                 weight=target_sims[source.work_id],
                 root_weight=root_sims[source.work_id],
                 concept_overlap=concept_overlaps[source.work_id],
-                author_overlap=author_overlaps[source.work_id]
+                author_overlap=author_overlaps[source.work_id],
             )
         )
-    
+
     return edges

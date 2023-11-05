@@ -1,10 +1,9 @@
-
 LOGGER_TITLE = "paper_recommender"
 
 BASE_WORKS_URL = "https://api.openalex.org/works"
 WORKS_ID_FILTER = "?filter=openalex_id:"
 
-COLLECTION_NAME = 'Work_Vectors'
+COLLECTION_NAME = "Work_Embeddings"
 
 DEV_SETTINGS = {
     "server_settings": {
@@ -12,7 +11,7 @@ DEV_SETTINGS = {
         "port": 8080,
         "log_config": "./log_config.ini",
         "log_level": "debug",
-        "reload": True
+        "reload": True,
     }
 }
 
@@ -22,11 +21,8 @@ PROD_SETTINGS = {
         "port": 8080,
         "log_config": "./log_config.ini",
         "log_level": "info",
-        "workers": 8
+        "workers": 8,
     }
 }
 
-SETTINGS = {
-    "dev": DEV_SETTINGS,
-    "prod": PROD_SETTINGS
-}
+SETTINGS = {"dev": DEV_SETTINGS, "prod": PROD_SETTINGS}

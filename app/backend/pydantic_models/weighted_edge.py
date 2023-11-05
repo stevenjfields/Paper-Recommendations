@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import *
 
+
 class WeightedEdge(BaseModel):
     target: str = ""
     source: str = ""
