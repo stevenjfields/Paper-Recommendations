@@ -51,19 +51,25 @@ async def get_references(parent: Article) -> Optional[List[Article]]:
     milvus_client = MilvusClient()
 
     references: List[Article] = []
+    if parent.work_id == "W2796347433":
+        pass
     if parent.references:
         work_ids = parent.references
     else:
         work_ids = parent.related
+    logger.info(f"total references: {len(work_ids)}")
+
 
     db_response = milvus_client.query_by_work_ids(work_ids)
     references.extend(ArticleFactory.from_milvus_query(db_response))
+    logger.info(f"from db: {len(references)}")
 
     exclude_list = [ref.work_id for ref in references]
     work_ids = list(filter(lambda x: x not in exclude_list, work_ids))
 
     if work_ids:
         from_open_alex = open_alex_client.get_works_by_filter(work_ids)
+        logger.info(f"from open alex: {len(from_open_alex)}")
         references.extend(from_open_alex)
 
     return references

@@ -1,4 +1,5 @@
 from requests import Session, Response
+from requests.adapters import HTTPAdapter, Retry
 import json
 from http import HTTPStatus
 from typing import *
@@ -11,6 +12,8 @@ class OpenAlexClient:
 
     def __init__(self):
         self._session = Session()
+        retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[429])
+        self._session.mount("https://", HTTPAdapter(max_retries=retries))
 
     def get_work_by_id(self, work_id: str) -> Article:
         get_work_url = f"{self._base_url}/works/{work_id}"
@@ -20,8 +23,8 @@ class OpenAlexClient:
 
     def get_works_by_filter(self, work_ids: List[str]) -> List[Article]:
         queries = list()
-        for i in range(0, len(work_ids), 50):
-            queries.append("|".join(work_ids[i : i + 50]))
+        for i in range(0, len(work_ids), 10):
+            queries.append("|".join(work_ids[i : i + 10]))
 
         works = list()
         for query in queries:

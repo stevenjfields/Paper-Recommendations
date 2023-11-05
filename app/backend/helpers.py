@@ -27,61 +27,65 @@ def create_embeddings(papers: List[Article]):
     work_ids = [paper.work_id for paper in papers]
     db_response = milvus_client.query_by_work_ids(work_ids)
 
-    ids_to_embed = work_ids
+    logger.info(f"Works passed: {len(work_ids)}")
+    logger.info(f"Works set: {len(set(work_ids))}")
+
+    ids_to_embed = set(work_ids)
     if len(db_response) > 0:
         ids_in_db = [item["work_id"] for item in db_response]
+        logger.info(f"db set: {len(set(ids_in_db))}")
         ids_to_embed = list(set(ids_to_embed) - set(ids_in_db))
 
     # Leaving the code below just because this change caused like a 2x speedup during this function
     # https://media.giphy.com/media/2UCt7zbmsLoCXybx6t/giphy.gif
     # _, model = oagbert("oagbert-v2")
 
-    def needs_embedded(item):
-        return item.work_id in ids_to_embed
-
-    papers = list(filter(needs_embedded, papers))
-
-    if papers:
+    if ids_to_embed:
         device, model = OAGBertModel().get_model()
         embeddings = list()
+        embedded_papers = list()
     else:
         return
-
+    
+    embedded_ids = list()
     for paper in papers:
-        (
-            input_ids,
-            input_masks,
-            token_type_ids,
-            masked_lm_labels,
-            position_ids,
-            position_ids_second,
-            masked_positions,
-            num_spans,
-        ) = model.build_inputs(
-            title=paper.title,
-            abstract=paper.get_abstract(),
-            venue=paper.host_venue,
-            authors=paper.authors,
-            concepts=paper.concepts,
-            affiliations=paper.affiliations,
-        )
+        if paper.work_id in ids_to_embed and paper.work_id not in embedded_ids:
+            embedded_papers.append(paper)
+            embedded_ids.append(paper.work_id)
+            (
+                input_ids,
+                input_masks,
+                token_type_ids,
+                masked_lm_labels,
+                position_ids,
+                position_ids_second,
+                masked_positions,
+                num_spans,
+            ) = model.build_inputs(
+                title=paper.title,
+                abstract=paper.get_abstract(),
+                venue=paper.host_venue,
+                authors=paper.authors,
+                concepts=paper.concepts,
+                affiliations=paper.affiliations,
+            )
 
-        _, pooled_output = model.bert.forward(
-            input_ids=torch.LongTensor(input_ids).unsqueeze(0).to(device),
-            token_type_ids=torch.LongTensor(token_type_ids).unsqueeze(0).to(device),
-            attention_mask=torch.LongTensor(input_masks).unsqueeze(0).to(device),
-            output_all_encoded_layers=False,
-            checkpoint_activations=False,
-            position_ids=torch.LongTensor(position_ids).unsqueeze(0).to(device),
-            position_ids_second=torch.LongTensor(position_ids_second)
-            .unsqueeze(0)
-            .to(device),
-        )
+            _, pooled_output = model.bert.forward(
+                input_ids=torch.LongTensor(input_ids).unsqueeze(0).to(device),
+                token_type_ids=torch.LongTensor(token_type_ids).unsqueeze(0).to(device),
+                attention_mask=torch.LongTensor(input_masks).unsqueeze(0).to(device),
+                output_all_encoded_layers=False,
+                checkpoint_activations=False,
+                position_ids=torch.LongTensor(position_ids).unsqueeze(0).to(device),
+                position_ids_second=torch.LongTensor(position_ids_second)
+                .unsqueeze(0)
+                .to(device),
+            )
 
-        pooled_normalized = torch.nn.functional.normalize(pooled_output, p=2, dim=1)
-        embeddings.append(pooled_normalized.tolist()[0])
+            pooled_normalized = torch.nn.functional.normalize(pooled_output, p=2, dim=1)
+            embeddings.append(pooled_normalized.tolist()[0])
 
-    milvus_client.insert_embedded_articles(papers, embeddings)
+    milvus_client.insert_embedded_articles(embedded_papers, embeddings)
 
 
 async def compute_similarities(target: Article, sources: List[Article]):

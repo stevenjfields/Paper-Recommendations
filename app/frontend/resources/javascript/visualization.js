@@ -255,7 +255,9 @@ const create_visualization = async () => {
         paper_list.push(result.value);
         result = map_iter.next();
     }
-    if (DEBUG) { console.log(paper_map); }
+    if (DEBUG) { 
+        console.log(paper_map);
+    }
 
     await createAllEmbeddings(paper_list.flat());
 
