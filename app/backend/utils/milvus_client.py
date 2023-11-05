@@ -155,5 +155,6 @@ class MilvusClient:
                     embeddings,
                 ]
             )
+            self._collection.flush()
         except Exception as e:
             logger.exception(e)

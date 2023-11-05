@@ -28,12 +28,12 @@ def create_embeddings(papers: List[Article]):
     db_response = milvus_client.query_by_work_ids(work_ids)
 
     logger.info(f"Works passed: {len(work_ids)}")
-    logger.info(f"Works set: {len(set(work_ids))}")
+    logger.info(f"Unique works: {len(set(work_ids))}")
 
     ids_to_embed = set(work_ids)
     if len(db_response) > 0:
         ids_in_db = [item["work_id"] for item in db_response]
-        logger.info(f"db set: {len(set(ids_in_db))}")
+        logger.info(f"Works found in Milvus: {len(set(ids_in_db))}")
         ids_to_embed = list(set(ids_to_embed) - set(ids_in_db))
 
     # Leaving the code below just because this change caused like a 2x speedup during this function
@@ -46,7 +46,7 @@ def create_embeddings(papers: List[Article]):
         embedded_papers = list()
     else:
         return
-    
+
     embedded_ids = list()
     for paper in papers:
         if paper.work_id in ids_to_embed and paper.work_id not in embedded_ids:
