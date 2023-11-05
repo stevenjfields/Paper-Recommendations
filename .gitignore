@@ -5,3 +5,4 @@
 /embeddings/
 /docker/volumes
 *.pyc
+/.vscode
