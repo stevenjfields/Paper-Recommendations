@@ -21,7 +21,13 @@ export interface WeightedEdge {
     author_overlap: number
 }
 
-export const PaperRecommendationsAPI = createApi({
+export interface GetSimilarityPayload {
+    root: PaperDetails,
+    target: PaperDetails,
+    sources: PaperDetails
+}
+
+export const paperRecommendationsAPI = createApi({
     reducerPath: "paperRecommendationsAPI",
     baseQuery: fetchBaseQuery({baseUrl: "http://0.0.0.0:8080/"}),
     endpoints: (builder) => ({
@@ -32,9 +38,24 @@ export const PaperRecommendationsAPI = createApi({
             query: (work: PaperDetails) => ({
                 url: `references/`,
                 method: "POST",
-                work
+                body: work
             })
         }),
-        
+        createEmbeddings: builder.query({
+            query: (works: Array<PaperDetails>) => ({
+                url: `embeddings/`,
+                method: "POST",
+                body: works
+            })
+        }),
+        getSimilarities: builder.query({
+            query: (data: GetSimilarityPayload) => ({
+                url: `similarities/`,
+                method: "POST",
+                body: data
+            })
+        })    
     })
 })
+
+export const { useFetchRootPaperQuery, useFetchReferencesQuery, useCreateEmbeddingsQuery, useGetSimilaritiesQuery } = paperRecommendationsAPI

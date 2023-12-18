@@ -1,11 +1,10 @@
-import { Card } from "react-bootstrap";
 import { useAutocompleteQuery } from "../../app/OpenAlexAPI";
-import { RootState } from "../../app/Store";
 import { setInputValue, setInputValueId } from "./SearchSlice";
 import { useAppSelector, useAppDispatch } from "../../app/Hooks";
 import "./Search.css"
-import { useState } from "react";
-import { setSelectedColorScheme, setDepth } from "../visualization/VisualizationSlice";
+import { resetPapers, appendPapers, setSelectedColorScheme, setDepth, toggleLoading } from "../visualization/VisualizationSlice";
+import { useFetchRootPaperQuery } from "../../app/PaperRecommendationsAPI";
+import React from "react";
 
 export default function Search() {
     const appDispatch = useAppDispatch();
@@ -69,7 +68,7 @@ export default function Search() {
                     </select>
                 </div> 
             </div>
-            <input type="button" value="Find similar papers" id="submit"></input>
+            <input type="button" value="Find similar papers" onClick={e => appDispatch(toggleLoading())}></input>
         </form>
     )
 }
